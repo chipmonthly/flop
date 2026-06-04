@@ -38,9 +38,9 @@
   },
   "scripts": {
     "env": "REACT_APP_VERSION=$npm_package_version REACT_APP_GIT_SHA=`git rev-parse --short HEAD`",
-    "start": "PORT=8090 yarn run env react-scripts start",
-    "build": "yarn run env react-scripts build",
-    "test": "yarn run env react-scripts test --coverage",
+    "start": "PORT=8090 NODE_OPTIONS=--openssl-legacy-provider yarn run env react-scripts start",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider yarn run env react-scripts build",
+    "test": "NODE_OPTIONS=--openssl-legacy-provider yarn run env react-scripts test --coverage",
     "eject": "react-scripts eject",
     "pretty": "prettier --write",
     "lint": "eslint --fix",
