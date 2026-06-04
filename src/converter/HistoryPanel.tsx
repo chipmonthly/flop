@@ -4,11 +4,14 @@ import styled from "styled-components";
 import {
   ACCENT_COLOR,
   BACKGROUND_COLOR,
+  EXPORT_CSV_BUTTON_STRING,
+  EXPORT_MD_BUTTON_STRING,
   HISTORY_CLEAR_BUTTON_STRING,
   HISTORY_PANEL_TITLE,
   MONOSPACED_FONT_FAMILY,
 } from "../constants";
 import { HistoryEntry } from "../hooks/useFormatHistory";
+import { exportAsCSV, exportAsMarkdown } from "./exportHistory";
 
 const PanelWrapper = styled.div`
   margin-top: 1.5rem;
@@ -160,6 +163,18 @@ const HistoryPanel: FC<HistoryPanelProps> = (
             onClick={props.onClear}
           >
             {HISTORY_CLEAR_BUTTON_STRING}
+          </ActionButton>
+          <ActionButton
+            disabled={props.history.length === 0}
+            onClick={() => exportAsMarkdown(props.formatName, props.history)}
+          >
+            {EXPORT_MD_BUTTON_STRING}
+          </ActionButton>
+          <ActionButton
+            disabled={props.history.length === 0}
+            onClick={() => exportAsCSV(props.formatName, props.history)}
+          >
+            {EXPORT_CSV_BUTTON_STRING}
           </ActionButton>
         </Actions>
       </Header>

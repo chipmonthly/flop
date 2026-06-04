@@ -50,6 +50,8 @@ export const UNPIN_TOOLTIP_STRING = "Remove pinned format";
 export const PIN_NAME_PLACEHOLDER = "Name this format…";
 export const HISTORY_PANEL_TITLE = "History";
 export const HISTORY_CLEAR_BUTTON_STRING = "Clear";
+export const EXPORT_MD_BUTTON_STRING = "⬇ Export MD";
+export const EXPORT_CSV_BUTTON_STRING = "⬇ Export CSV";
 
 // local storage
 export const DECIMAL_INPUT_STORAGE_KEY = "-input";
