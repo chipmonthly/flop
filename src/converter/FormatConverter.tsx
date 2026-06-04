@@ -2,6 +2,7 @@ import React, { FC, ReactElement, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
 import {
+  DECIMAL_INPUT_STORAGE_KEY,
   FLOP_STORAGE_KEY,
   FLOP754_STORAGE_KEY,
   NOTATION_STORAGE_KEY,
@@ -86,9 +87,15 @@ const FormatConverter: FC<FormatConverterProps> = (
     `${props.name}${NOTATION_STORAGE_KEY}`,
     false
   );
+  const [decimalInput, setDecimalInput] = useLocalStorage(
+    `${props.name}${DECIMAL_INPUT_STORAGE_KEY}`,
+    ""
+  );
   const [storedFlop, setStoredFlop] = useState(defaultFlop());
   const [error, setError] = useState<null | Flop>(null);
-  const { history, addEntry, clearHistory } = useFormatHistory(props.name);
+  const { history, addEntry, clearHistory, deleteEntry } = useFormatHistory(
+    props.name
+  );
 
   const onFlop754Update = (value: Flop754) => {
     setFlop(null);
@@ -153,6 +160,33 @@ const FormatConverter: FC<FormatConverterProps> = (
     props.significandWidth
   );
 
+  const handleAddCurrentToHistory = (): void => {
+    const inputVal =
+      decimalInput ||
+      safeStringifyFlop(
+        storedFlop,
+        scientificNotation,
+        props.supportsInfinity,
+        props.supportsNaN
+      );
+    if (!inputVal) return;
+    addEntry({
+      decimalInput: inputVal,
+      storedValue: safeStringifyFlop(
+        storedFlop,
+        scientificNotation,
+        props.supportsInfinity,
+        props.supportsNaN
+      ),
+      binaryRep: stringifyBits([sign, exponent, significand].flat()),
+      hexRep: stringifyBitsToHex([sign, exponent, significand].flat()),
+      error: error ? stringifyFlop(error, scientificNotation) : "0",
+      sign: stringifyBits(sign),
+      exponent: stringifyBits(exponent),
+      mantissa: stringifyBits(significand),
+    });
+  };
+
   return (
     <Wrapper>
       <Title>{props.name}</Title>
@@ -184,6 +218,8 @@ const FormatConverter: FC<FormatConverterProps> = (
       <Panel
         formatName={props.name}
         clearInput={flop === null}
+        decimalInput={decimalInput}
+        setDecimalInput={setDecimalInput}
         stored={safeStringifyFlop(
           storedFlop,
           scientificNotation,
@@ -223,6 +259,10 @@ const FormatConverter: FC<FormatConverterProps> = (
             ),
             binaryRep: stringifyBits([sign, exponent, significand].flat()),
             hexRep: stringifyBitsToHex([sign, exponent, significand].flat()),
+            error: error ? stringifyFlop(error, scientificNotation) : "0",
+            sign: stringifyBits(sign),
+            exponent: stringifyBits(exponent),
+            mantissa: stringifyBits(significand),
           });
         }}
       />
@@ -234,9 +274,15 @@ const FormatConverter: FC<FormatConverterProps> = (
       />
       <HistoryPanel
         formatName={props.name}
+        exponentWidth={props.exponentWidth}
         history={history}
-        onSelect={(entry) => onFlopUpdate(generateFlop(entry.decimalInput))}
+        onSelect={(entry) => {
+          setDecimalInput(entry.decimalInput);
+          onFlopUpdate(generateFlop(entry.decimalInput));
+        }}
         onClear={clearHistory}
+        onAdd={handleAddCurrentToHistory}
+        onDelete={deleteEntry}
       />
     </Wrapper>
   );

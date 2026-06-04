@@ -9,13 +9,11 @@ import {
   CLIPBOARD_BUTTON_STRING,
   CLIPBOARD_TOOLTIP_STRING,
   DECIMAL_INPUT_FIELD_NAME,
-  DECIMAL_INPUT_STORAGE_KEY,
   ERROR_FIELD_NAME,
   HEX_PREFIX_STRING,
   HEX_REPRESENTATION_FIELD,
   VALUE_STORED_FIELD_NAME,
 } from "../constants";
-import useLocalStorage from "../hooks/useLocalStorage";
 import {
   bitsFromHexString,
   bitsFromString,
@@ -83,6 +81,8 @@ const ClipboardButton = styled.button`
 interface PanelProps {
   formatName: string;
   clearInput: boolean;
+  decimalInput: string;
+  setDecimalInput: (value: string) => void;
   stored: string;
   error: string;
   bits: boolean[];
@@ -92,10 +92,7 @@ interface PanelProps {
 }
 
 const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
-  const [decimalInput, setDecimalInput] = useLocalStorage(
-    `${props.formatName}${DECIMAL_INPUT_STORAGE_KEY}`,
-    ""
-  );
+  const { decimalInput, setDecimalInput } = props;
   const [binaryRep, setBinaryRep] = useState(stringifyBits(props.bits));
   const [hexRep, setHexRep] = useState(stringifyBitsToHex(props.bits));
 
@@ -225,6 +222,11 @@ const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
             onChange={(e) =>
               onBinaryInput(e.target.value, e.target.validity.valid)
             }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                props.onCommit(decimalInput || props.stored);
+              }
+            }}
           />
           <ClipboardButton
             title={CLIPBOARD_TOOLTIP_STRING}
@@ -250,6 +252,11 @@ const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
             onChange={(e) =>
               onHexInput(e.target.value, e.target.validity.valid)
             }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                props.onCommit(decimalInput || props.stored);
+              }
+            }}
           />
           <ClipboardButton
             title={CLIPBOARD_TOOLTIP_STRING}
