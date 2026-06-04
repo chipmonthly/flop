@@ -12,13 +12,14 @@ Every predefined format in `src/constants.ts` is a plain object appended to `FOR
 component changes are needed for new standard formats.
 
 The **existing** shape is:
+
 ```ts
 {
-  name: string;          // displayed in the tab and as the converter title
+  name: string; // displayed in the tab and as the converter title
   exponentWidth: number;
   significandWidth: number;
-  urlPath: string;       // must be unique; becomes the React Router path
-  pageTitle: string;     // written to document.title on navigation
+  urlPath: string; // must be unique; becomes the React Router path
+  pageTitle: string; // written to document.title on navigation
 }
 ```
 
@@ -27,14 +28,15 @@ The **existing** shape is:
 ## Phase 0 — Change Dev-Server Port to 8090
 
 ### Rationale
+
 CRA's `react-scripts start` respects the `PORT` environment variable. The cleanest way to
 bake this into the project (so every developer and CI gets it automatically) is to prefix
 the `start` script in `package.json`.
 
 ### Files to change
 
-| File | Change |
-|---|---|
+| File           | Change                                    |
+| -------------- | ----------------------------------------- |
 | `package.json` | Prepend `PORT=8090` to the `start` script |
 
 ### Exact diff
@@ -49,6 +51,7 @@ the `start` script in `package.json`.
 > `cross-env` as a dependency now — the project runs macOS/Linux in CI.
 
 ### Verification
+
 - [ ] `yarn start` opens the dev server at `http://localhost:8090`
 - [ ] `yarn test --watchAll=false` still passes (tests do not depend on the port)
 - [ ] `yarn pretty-check .` and `yarn lint-check src` both pass
@@ -62,11 +65,11 @@ the `start` script in `package.json`.
 These formats come from the 2022 NVIDIA/Arm/Intel FP8 whitepaper and the OCP MX
 (Microscaling) specification. They are **not** part of IEEE 754 proper.
 
-| Format | Bits | Sign | Exponent | Mantissa | Infinity | NaN |
-|---|---|---|---|---|---|---|
-| **FP8_E5M2** | 8 | 1 | 5 | 2 | ✅ supported | ✅ multiple patterns |
-| **FP8_E4M3** | 8 | 1 | 4 | 3 | ❌ not supported | ⚠️ single pattern only |
-| **FP4 (E2M1)** | 4 | 1 | 2 | 1 | ❌ not supported | ❌ not supported |
+| Format         | Bits | Sign | Exponent | Mantissa | Infinity         | NaN                    |
+| -------------- | ---- | ---- | -------- | -------- | ---------------- | ---------------------- |
+| **FP8_E5M2**   | 8    | 1    | 5        | 2        | ✅ supported     | ✅ multiple patterns   |
+| **FP8_E4M3**   | 8    | 1    | 4        | 3        | ❌ not supported | ⚠️ single pattern only |
+| **FP4 (E2M1)** | 4    | 1    | 2        | 1        | ❌ not supported | ❌ not supported       |
 
 Reference: [FP8 Formats for Deep Learning (arXiv 2209.05433)](https://arxiv.org/abs/2209.05433)
 and [OCP MX Specification v1.0](https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf).
@@ -101,6 +104,7 @@ export interface FormatDefinition {
 ```
 
 Add explicit `FormatDefinition` types to all existing format constants:
+
 ```ts
 export const FP32: FormatDefinition = { ... };
 export const FP64: FormatDefinition = { ... };
@@ -132,8 +136,8 @@ export const FP8_E4M3: FormatDefinition = {
   significandWidth: 3,
   urlPath: "/fp8-e4m3-converter",
   pageTitle: "FP8 E4M3 Converter",
-  supportsInfinity: false,  // E4M3 has no ±Inf encoding by spec
-  supportsNaN: true,        // one NaN pattern: all-1s exponent + all-1s mantissa
+  supportsInfinity: false, // E4M3 has no ±Inf encoding by spec
+  supportsNaN: true, // one NaN pattern: all-1s exponent + all-1s mantissa
   description: "8-bit float, 4-bit exponent (NVIDIA/Arm/Intel spec 2022)",
   referenceUrl: "https://arxiv.org/abs/2209.05433",
 };
@@ -153,8 +157,18 @@ export const FP4_E2M1: FormatDefinition = {
 ```
 
 Update `FORMATS` to a typed array and append the three new constants:
+
 ```ts
-export const FORMATS: FormatDefinition[] = [FP32, FP64, FP16, BF16, TF32, FP8_E5M2, FP8_E4M3, FP4_E2M1];
+export const FORMATS: FormatDefinition[] = [
+  FP32,
+  FP64,
+  FP16,
+  BF16,
+  TF32,
+  FP8_E5M2,
+  FP8_E4M3,
+  FP4_E2M1,
+];
 ```
 
 ### 1-C — Thread `supportsInfinity` / `supportsNaN` through the UI
@@ -162,6 +176,7 @@ export const FORMATS: FormatDefinition[] = [FP32, FP64, FP16, BF16, TF32, FP8_E5
 #### `src/converter/FormatConverter.tsx`
 
 1. Extend `FormatConverterProps` with the two optional flags:
+
    ```ts
    interface FormatConverterProps {
      name: string;
@@ -173,6 +188,7 @@ export const FORMATS: FormatDefinition[] = [FP32, FP64, FP16, BF16, TF32, FP8_E5
    ```
 
 2. Add a local helper (not exported) for guarded stringification:
+
    ```ts
    const safeStringifyFlop = (
      flop: Flop,
@@ -209,11 +225,11 @@ properties, so `supportsInfinity` and `supportsNaN` are forwarded automatically.
 ### 1-D — New constants for special-value labels
 
 Add to `src/constants.ts`:
+
 ```ts
 export const INFINITY_NOT_SUPPORTED_STRING =
   "[±Infinity not supported by this format]";
-export const NAN_NOT_SUPPORTED_STRING =
-  "[NaN not supported by this format]";
+export const NAN_NOT_SUPPORTED_STRING = "[NaN not supported by this format]";
 ```
 
 Reference these in `safeStringifyFlop` instead of inline strings.
@@ -224,11 +240,7 @@ Create `src/converter/flop.formats.test.ts`:
 
 ```ts
 import { FP4_E2M1, FP8_E4M3, FP8_E5M2 } from "../constants";
-import {
-  convertFlopToFlop754,
-  Flop754Type,
-  generateFlop,
-} from "./flop";
+import { convertFlopToFlop754, Flop754Type, generateFlop } from "./flop";
 
 describe("FP8 E5M2", () => {
   it("has total bit width of 8", () => {
@@ -265,6 +277,7 @@ describe("FP4 E2M1", () => {
 ```
 
 ### Verification
+
 - [ ] Three new tabs appear: `FP8 E5M2`, `FP8 E4M3`, `FP4 E2M1`
 - [ ] FP8_E5M2: entering `1e40` shows `+Infinity` (supported)
 - [ ] FP8_E4M3: entering `1e40` shows `[±Infinity not supported by this format]`
@@ -277,6 +290,7 @@ describe("FP4 E2M1", () => {
 ## Phase 2 — Custom Format Pinning
 
 ### Goal
+
 Allow users to "pin" a custom format (from the Custom tab) as a persistent named tab
 button so they can return to it without re-entering widths.
 
@@ -287,12 +301,12 @@ import { useCallback } from "react";
 import useLocalStorage from "./useLocalStorage";
 
 export interface PinnedFormat {
-  id: string;            // unique: `${Date.now()}-${Math.random().toString(36).slice(2)}`
-  name: string;          // user-chosen label
+  id: string; // unique: `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  name: string; // user-chosen label
   exponentWidth: number;
   significandWidth: number;
-  urlPath: string;       // `/custom-pinned-${id}`
-  pageTitle: string;     // `${name} Converter`
+  urlPath: string; // `/custom-pinned-${id}`
+  pageTitle: string; // `${name} Converter`
 }
 
 export const usePinnedFormats = (): {
@@ -324,8 +338,7 @@ export const usePinnedFormats = (): {
   );
 
   const unpinFormat = useCallback(
-    (id: string) =>
-      setPinnedFormats(pinnedFormats.filter((p) => p.id !== id)),
+    (id: string) => setPinnedFormats(pinnedFormats.filter((p) => p.id !== id)),
     [pinnedFormats, setPinnedFormats]
   );
 
@@ -334,6 +347,7 @@ export const usePinnedFormats = (): {
 ```
 
 Add to `src/constants.ts`:
+
 ```ts
 export const PINNED_FORMATS_KEY = "pinned-formats";
 export const PIN_FORMAT_BUTTON_STRING = "📌 Pin this format";
@@ -374,27 +388,29 @@ export const PIN_NAME_PLACEHOLDER = "Name this format…";
 1. Call `usePinnedFormats()` in `App`.
 2. Include pinned formats between predefined and Custom:
    ```ts
-   const tabs = useMemo(
-     () => [...FORMATS, ...pinnedFormats, CUSTOM],
-     [pinnedFormats]
-   );
+   const tabs = useMemo(() => [...FORMATS, ...pinnedFormats, CUSTOM], [
+     pinnedFormats,
+   ]);
    ```
 3. Add dynamic `<Route>` entries:
    ```tsx
-   {pinnedFormats.map((pf) => (
-     <Route key={pf.id} path={pf.urlPath}>
-       <FormatConverter
-         name={pf.name}
-         exponentWidth={pf.exponentWidth}
-         significandWidth={pf.significandWidth}
-       />
-     </Route>
-   ))}
+   {
+     pinnedFormats.map((pf) => (
+       <Route key={pf.id} path={pf.urlPath}>
+         <FormatConverter
+           name={pf.name}
+           exponentWidth={pf.exponentWidth}
+           significandWidth={pf.significandWidth}
+         />
+       </Route>
+     ));
+   }
    ```
 
 ### 2-D — Extend `TabBar.tsx` for removable tabs
 
 Extend the tab descriptor shape to include an optional `onRemove` callback:
+
 ```ts
 // TabBar props
 tabs: {
@@ -408,6 +424,7 @@ When `onRemove` is provided, render a small `×` button inside the `TabButton`.
 The `×` click must call `onRemove` and `stopPropagation()` to prevent tab activation.
 
 In `App.tsx`, pass `onRemove` only for pinned tabs:
+
 ```ts
 const tabs = useMemo(
   () => [
@@ -423,6 +440,7 @@ const tabs = useMemo(
 ```
 
 ### Verification
+
 - [ ] In Custom tab, set E=4 M=3, enter name "My E4M3", click Pin → new tab appears
 - [ ] Clicking `×` on a pinned tab removes it immediately
 - [ ] Pinned tabs survive page refresh (localStorage persisted)
@@ -435,6 +453,7 @@ const tabs = useMemo(
 ## Phase 3 — Per-Format Conversion History
 
 ### Goal
+
 Track values the user **commits** (Enter key or Copy button) per format. Render a
 collapsible history panel. Clicking an entry re-loads the conversion.
 
@@ -446,11 +465,11 @@ import useLocalStorage from "./useLocalStorage";
 
 export interface HistoryEntry {
   id: string;
-  timestamp: number;     // Date.now()
-  decimalInput: string;  // raw user string, e.g. "3.14"
-  storedValue: string;   // stringified back-converted result
-  binaryRep: string;     // full bit string
-  hexRep: string;        // hex string (without "0x" prefix)
+  timestamp: number; // Date.now()
+  decimalInput: string; // raw user string, e.g. "3.14"
+  storedValue: string; // stringified back-converted result
+  binaryRep: string; // full bit string
+  hexRep: string; // hex string (without "0x" prefix)
 }
 
 const MAX_HISTORY = 100;
@@ -486,6 +505,7 @@ export const useFormatHistory = (
 ```
 
 Add to `src/constants.ts`:
+
 ```ts
 export const HISTORY_STORAGE_KEY = "-history";
 export const MAX_HISTORY_ENTRIES = 100;
@@ -555,6 +575,7 @@ interface HistoryPanelProps {
 ```
 
 Layout (all via `styled-components`):
+
 - **Toggle button**: `"▶ History (N)"` collapsed / `"▼ History (N)"` expanded.
   Use a CSS `max-height` transition (`max-height: 0` ↔ `max-height: 30rem`) for the
   open/close animation.
@@ -568,6 +589,7 @@ Layout (all via `styled-components`):
 - **"Clear" button** in the panel header calls `props.onClear()`.
 
 ### Verification
+
 - [ ] Typing "3.14" + Enter → history entry appears immediately
 - [ ] Typing character-by-character does **not** add entries
 - [ ] Clicking the decimal "Copy" button adds an entry
@@ -583,6 +605,7 @@ Layout (all via `styled-components`):
 ## Phase 4 — History Export (Markdown & CSV/Excel)
 
 ### Goal
+
 Add "Export MD" and "Export CSV" buttons to `HistoryPanel` using only native browser APIs.
 
 ### 4-A — Pure export utility `src/converter/exportHistory.ts`
@@ -614,10 +637,16 @@ export const exportAsMarkdown = (
   const rows = history
     .map(
       (e, i) =>
-        `| ${i + 1} | ${fmt(e.timestamp)} | \`${e.decimalInput}\` | \`${e.storedValue}\` | \`${e.binaryRep}\` | \`0x${e.hexRep}\` |`
+        `| ${i + 1} | ${fmt(e.timestamp)} | \`${e.decimalInput}\` | \`${
+          e.storedValue
+        }\` | \`${e.binaryRep}\` | \`0x${e.hexRep}\` |`
     )
     .join("\n");
-  download(`${formatName}-history.md`, header + tableHead + rows, "text/markdown");
+  download(
+    `${formatName}-history.md`,
+    header + tableHead + rows,
+    "text/markdown"
+  );
 };
 
 export const exportAsCSV = (
@@ -649,6 +678,7 @@ export const exportAsCSV = (
 ### 4-B — Add export buttons to `HistoryPanel.tsx`
 
 In the panel header (next to "Clear"), add:
+
 ```tsx
 <ExportButton
   disabled={props.history.length === 0}
@@ -669,17 +699,19 @@ Style `ExportButton` disabled state: `opacity: 0.4; cursor: not-allowed`.
 ### 4-C — New constants
 
 Add to `src/constants.ts`:
+
 ```ts
 export const EXPORT_MD_BUTTON_STRING = "⬇ Export MD";
 export const EXPORT_CSV_BUTTON_STRING = "⬇ Export CSV";
 ```
 
 ### Verification
+
 - [ ] With ≥1 history entry, "Export MD" triggers a download of `<format>-history.md`
 - [ ] The downloaded Markdown file contains a valid GFM table with correct columns
 - [ ] With ≥1 history entry, "Export CSV" triggers a download of `<format>-history.csv`
 - [ ] Opening the CSV in Excel (macOS Numbers or LibreOffice) shows columns correctly
-  with no encoding artifacts (BOM present)
+      with no encoding artifacts (BOM present)
 - [ ] Both buttons are disabled / greyed when history is empty
 - [ ] Export does not mutate history state (pure function, no side effects on state)
 - [ ] `yarn test --watchAll=false` green

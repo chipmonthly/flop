@@ -61,16 +61,16 @@ flop/
 
 Understanding these before touching `flop.ts` is critical.
 
-| Concept | Description |
-|---|---|
-| `Flop` | Unbounded-precision decimal value (`{ type: FlopType, value: BigNumber }`) |
-| `Flop754` | IEEE 754 representation (`{ type, sign, exponent, significand }`) |
-| `FlopType` | `NORMAL \| POSITIVE_INFINITY \| NEGATIVE_INFINITY \| NAN` |
-| `Flop754Type` | Adds `SUBNORMAL` to the above |
-| Exponent bias | `2^(width-1) - 1`, computed by `getExponentBias(width)` |
-| Exponent range | Min/max biased exponents from `getExponentRange(width)` |
-| Rounding modes | `ROUNDING_MODE.halfToEven` (default) and `ROUNDING_MODE.towardZero` |
-| BigNumber | All arithmetic uses `bignumber.js` configured to 3 000 decimal places |
+| Concept        | Description                                                                |
+| -------------- | -------------------------------------------------------------------------- |
+| `Flop`         | Unbounded-precision decimal value (`{ type: FlopType, value: BigNumber }`) |
+| `Flop754`      | IEEE 754 representation (`{ type, sign, exponent, significand }`)          |
+| `FlopType`     | `NORMAL \| POSITIVE_INFINITY \| NEGATIVE_INFINITY \| NAN`                  |
+| `Flop754Type`  | Adds `SUBNORMAL` to the above                                              |
+| Exponent bias  | `2^(width-1) - 1`, computed by `getExponentBias(width)`                    |
+| Exponent range | Min/max biased exponents from `getExponentRange(width)`                    |
+| Rounding modes | `ROUNDING_MODE.halfToEven` (default) and `ROUNDING_MODE.towardZero`        |
+| BigNumber      | All arithmetic uses `bignumber.js` configured to 3 000 decimal places      |
 
 ### Conversion flow
 
@@ -117,40 +117,44 @@ The reverse path (bits → decimal) uses `generateFlop754()` → `convertFlop754
 
 All commands use `yarn`. **Never** substitute `npm run`.
 
-| Command | Purpose |
-|---|---|
-| `yarn install` | Install dependencies |
-| `yarn start` | Start dev server at <http://localhost:3000> (hot-reload) |
-| `yarn test` | Run Jest in interactive watch mode |
-| `yarn test --watchAll=false` | Run Jest once (CI mode) |
-| `yarn lint` | Auto-fix ESLint issues |
-| `yarn lint-check src` | Check without fixing (used in CI) |
-| `yarn pretty` | Auto-format with Prettier |
-| `yarn pretty-check .` | Check formatting without fixing (used in CI) |
-| `yarn build` | Production build to `build/` |
-| `yarn deploy` | Build + publish to GitHub Pages (requires `GITHUB_TOKEN`) |
+| Command                      | Purpose                                                   |
+| ---------------------------- | --------------------------------------------------------- |
+| `yarn install`               | Install dependencies                                      |
+| `yarn start`                 | Start dev server at <http://localhost:3000> (hot-reload)  |
+| `yarn test`                  | Run Jest in interactive watch mode                        |
+| `yarn test --watchAll=false` | Run Jest once (CI mode)                                   |
+| `yarn lint`                  | Auto-fix ESLint issues                                    |
+| `yarn lint-check src`        | Check without fixing (used in CI)                         |
+| `yarn pretty`                | Auto-format with Prettier                                 |
+| `yarn pretty-check .`        | Check formatting without fixing (used in CI)              |
+| `yarn build`                 | Production build to `build/`                              |
+| `yarn deploy`                | Build + publish to GitHub Pages (requires `GITHUB_TOKEN`) |
 
 ---
 
 ## Code Style & Constraints
 
 ### TypeScript
+
 - **Strict mode is on** — no `any`, no `ts-ignore`, no implicit `any`.
 - All exported functions must have explicit return types.
 - Prefer `interface` over `type` for object shapes; use `type` for unions/aliases.
 
 ### Imports
+
 - Import order is enforced by `eslint-plugin-simple-import-sort`.
   The pre-commit hook (`lint-staged`) will reorder automatically.
 - Do not use barrel `index.ts` re-exports inside `src/converter/` — import directly.
 
 ### Styling
+
 - All styles live inside the component file via `styled-components`.
 - Use colour/font constants from `src/constants.ts` (e.g. `ACCENT_COLOR`, `BACKGROUND_COLOR`,
   `MAIN_FONT_FAMILY`, `MONOSPACED_FONT_FAMILY`). Never hard-code hex values in components.
 - Do not add any CSS files, Tailwind, or other CSS-in-JS libraries.
 
 ### Testing
+
 - Tests live alongside source files (e.g. `App.test.tsx`).
 - Use `@testing-library/react` + `@testing-library/jest-dom`.
 - Each meaningful pure function in `flop.ts` should have a corresponding unit test.
@@ -162,11 +166,11 @@ All commands use `yarn`. **Never** substitute `npm run`.
 
 Set automatically during `yarn start` / `yarn build` via the `env` script:
 
-| Variable | Value | Usage |
-|---|---|---|
-| `REACT_APP_VERSION` | `package.json` version | Displayed in Footer |
-| `REACT_APP_GIT_SHA` | Short git SHA | Displayed in Footer as build link |
-| `NODE_ENV` | `test` / `development` / `production` | GA test mode guard |
+| Variable            | Value                                 | Usage                             |
+| ------------------- | ------------------------------------- | --------------------------------- |
+| `REACT_APP_VERSION` | `package.json` version                | Displayed in Footer               |
+| `REACT_APP_GIT_SHA` | Short git SHA                         | Displayed in Footer as build link |
+| `NODE_ENV`          | `test` / `development` / `production` | GA test mode guard                |
 
 Do **not** create a `.env` file that overrides these.
 
@@ -174,12 +178,13 @@ Do **not** create a `.env` file that overrides these.
 
 ## CI / CD
 
-| Trigger | Jobs |
-|---|---|
-| Push or PR to `main` | Prettier check → ESLint check → Tests |
-| GitHub Release (publish/edit/delete) | Same checks + deploy to GitHub Pages |
+| Trigger                              | Jobs                                  |
+| ------------------------------------ | ------------------------------------- |
+| Push or PR to `main`                 | Prettier check → ESLint check → Tests |
+| GitHub Release (publish/edit/delete) | Same checks + deploy to GitHub Pages  |
 
 The CI must be green before merging. If you create a PR, ensure:
+
 ```sh
 yarn pretty-check .   # passes
 yarn lint-check src   # passes
@@ -193,14 +198,14 @@ yarn test --watchAll=false  # passes
 These are documented technical debts — do not silently "fix" them without understanding the
 full impact and adding a test:
 
-| File | TODO |
-|---|---|
-| `src/App.tsx` L32 | `min-width: 50rem` — handle mobile/small viewports more elegantly |
-| `converter/flop.ts` L178 | `deconstructFlop754` assumes significand in Flop754 fits the width |
-| `converter/flop.ts` L258 | `convertFlopToFlop754` — cleanup and optimize |
-| `converter/flop.ts` L301 | Rounding dispatch is described as an "abomination" |
-| `converter/flop.ts` L334 | FlopType override at end of `convertFlopToFlop754` — verify necessity |
-| `converter/flop.ts` L363 | `calculateError` does not handle non-normal numbers |
+| File                     | TODO                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `src/App.tsx` L32        | `min-width: 50rem` — handle mobile/small viewports more elegantly                 |
+| `converter/flop.ts` L178 | `deconstructFlop754` assumes significand in Flop754 fits the width                |
+| `converter/flop.ts` L258 | `convertFlopToFlop754` — cleanup and optimize                                     |
+| `converter/flop.ts` L301 | Rounding dispatch is described as an "abomination"                                |
+| `converter/flop.ts` L334 | FlopType override at end of `convertFlopToFlop754` — verify necessity             |
+| `converter/flop.ts` L363 | `calculateError` does not handle non-normal numbers                               |
 | `converter/flop.ts` L466 | `roundHalfToEven` / `roundTowardInfinity` / `roundTowardZero` need docs & cleanup |
 
 ---
@@ -209,20 +214,21 @@ full impact and adding a test:
 
 ### Remotes
 
-| Remote | URL | Role |
-|---|---|---|
-| `origin` | `git@github.com-chipmonthly:chipmonthly/flop.git` | Your fork — push here |
-| `afterdusk` | `git@github.com-chipmonthly:afterdusk/flop.git` | Upstream — fetch only, never push |
+| Remote      | URL                                               | Role                              |
+| ----------- | ------------------------------------------------- | --------------------------------- |
+| `origin`    | `git@github.com-chipmonthly:chipmonthly/flop.git` | Your fork — push here             |
+| `afterdusk` | `git@github.com-chipmonthly:afterdusk/flop.git`   | Upstream — fetch only, never push |
 
 ### Branch Model
 
-| Branch | Purpose | Push target |
-|---|---|---|
-| `main` | Stable, CI-green, deployed to GitHub Pages on release | `origin/main` via PR only |
-| `dev` | Active development integration branch | `origin/dev` |
-| `feature/<short-description>` | One branch per feature or bug fix | `origin/feature/…` |
+| Branch                        | Purpose                                               | Push target               |
+| ----------------------------- | ----------------------------------------------------- | ------------------------- |
+| `main`                        | Stable, CI-green, deployed to GitHub Pages on release | `origin/main` via PR only |
+| `dev`                         | Active development integration branch                 | `origin/dev`              |
+| `feature/<short-description>` | One branch per feature or bug fix                     | `origin/feature/…`        |
 
 **Always branch from `dev`**, not from `main`:
+
 ```sh
 git checkout dev
 git pull origin dev
@@ -246,19 +252,20 @@ Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 **Allowed types:**
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or user-visible behaviour |
-| `fix` | Bug fix |
-| `refactor` | Code restructuring with no behaviour change |
-| `test` | Adding or updating tests only |
-| `chore` | Tooling, dependencies, config (no src change) |
-| `docs` | Documentation only (AGENTS.md, README, comments) |
-| `style` | Formatting only (Prettier, import order) |
+| Type       | When to use                                      |
+| ---------- | ------------------------------------------------ |
+| `feat`     | New feature or user-visible behaviour            |
+| `fix`      | Bug fix                                          |
+| `refactor` | Code restructuring with no behaviour change      |
+| `test`     | Adding or updating tests only                    |
+| `chore`    | Tooling, dependencies, config (no src change)    |
+| `docs`     | Documentation only (AGENTS.md, README, comments) |
+| `style`    | Formatting only (Prettier, import order)         |
 
 **Scope** (optional but encouraged): `core`, `ui`, `constants`, `hooks`, `ci`.
 
 **Examples:**
+
 ```
 feat(constants): add FP8_E5M2 and FP8_E4M3 format definitions
 fix(core): handle subnormal rounding edge case in roundHalfToEven
@@ -267,6 +274,7 @@ docs: update AGENTS.md with git workflow guidance
 ```
 
 **Subject line rules:**
+
 - 72 characters or fewer.
 - Imperative mood: "add", "fix", "remove" — not "added", "fixes", "removing".
 - No trailing period.
@@ -276,6 +284,7 @@ docs: update AGENTS.md with git workflow guidance
 
 The project uses `simple-git-hooks` + `lint-staged`. On every `git commit` the hook
 automatically runs:
+
 - `yarn pretty` — Prettier formats staged `*.{js,jsx,ts,tsx,md,json,html,css,yml}` files.
 - `yarn lint` — ESLint auto-fixes staged `*.{js,jsx,ts,tsx}` files.
 
@@ -284,6 +293,7 @@ before committing.
 
 If the hook is not yet installed in your local checkout (e.g. after a fresh clone),
 initialise it once:
+
 ```sh
 yarn install   # simple-git-hooks installs via postinstall
 ```
@@ -291,6 +301,7 @@ yarn install   # simple-git-hooks installs via postinstall
 ### Syncing With Upstream
 
 Periodically pull upstream changes into `dev` to stay current:
+
 ```sh
 git fetch afterdusk
 git checkout dev
@@ -298,6 +309,7 @@ git merge afterdusk/main   # or --rebase if the history is linear
 ```
 
 Resolve any conflicts, re-run the CI checks, then push:
+
 ```sh
 git push origin dev
 ```
@@ -331,6 +343,7 @@ git push origin feature/fp8-formats
 ### Pull Request Checklist
 
 Before opening (or requesting review on) a PR:
+
 - [ ] Branch is rebased onto the latest `origin/dev` (no stale merge commits).
 - [ ] All commits follow the Conventional Commits format.
 - [ ] `yarn pretty-check .` passes locally.
@@ -350,6 +363,7 @@ Before opening (or requesting review on) a PR:
 ### Tagging & Releases
 
 Only the project maintainer creates tags and GitHub Releases. Agents must not:
+
 ```sh
 git tag          # ← do not create tags
 git push --tags  # ← do not push tags
@@ -383,6 +397,7 @@ A GitHub Release triggers the `release.yml` CD workflow that deploys to GitHub P
 ## Quick Checklist Before Submitting Changes
 
 **Code quality**
+
 - [ ] `yarn pretty-check .` passes (no formatting violations)
 - [ ] `yarn lint-check src` passes (no lint errors)
 - [ ] `yarn test --watchAll=false` passes (all tests green, coverage not regressed)
@@ -392,6 +407,7 @@ A GitHub Release triggers the `release.yml` CD workflow that deploys to GitHub P
 - [ ] TypeScript strict mode still compiles (`yarn build` succeeds)
 
 **Git hygiene**
+
 - [ ] Working on a feature branch branched from `dev` (not `main`)
 - [ ] All commit messages follow Conventional Commits format
 - [ ] No unrelated files are staged (`git status` is clean)
