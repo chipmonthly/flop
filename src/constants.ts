@@ -45,6 +45,9 @@ export const POSITIVE_INFINITY_STRING = "infinity";
 export const NEGATIVE_INFINITY_STRING = "-infinity";
 export const NAN_STRING = "NaN";
 export const HEX_PREFIX_STRING = "0x";
+export const PIN_FORMAT_BUTTON_STRING = "📌 Pin this format";
+export const UNPIN_TOOLTIP_STRING = "Remove pinned format";
+export const PIN_NAME_PLACEHOLDER = "Name this format…";
 
 // local storage
 export const DECIMAL_INPUT_STORAGE_KEY = "-input";
@@ -54,6 +57,7 @@ export const ROUNDING_STORAGE_KEY = "-rounding";
 export const NOTATION_STORAGE_KEY = "-notation";
 export const CUSTOM_EXPONENT_KEY = "custom-exponent";
 export const CUSTOM_SIGNIFICAND_KEY = "custom-significand";
+export const PINNED_FORMATS_KEY = "pinned-formats";
 
 // styling
 export const BACKGROUND_COLOR = "#0e171c";

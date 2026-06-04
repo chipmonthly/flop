@@ -22,6 +22,7 @@ import {
 } from "./constants";
 import CustomFormatConverter from "./converter/CustomFormatConverter";
 import FormatConverter from "./converter/FormatConverter";
+import { usePinnedFormats } from "./hooks/usePinnedFormats";
 import Footer from "./ui/Footer";
 import Header from "./ui/Header";
 import TabBar from "./ui/TabBar";
@@ -52,7 +53,19 @@ const App: FC = (): ReactElement => {
   const [active, setActive] = useState(DEFAULT_FORMAT_INDEX);
   const location = useLocation();
   const history = useHistory();
-  const tabs = useMemo(() => [...FORMATS, CUSTOM], []);
+  const { pinnedFormats, pinFormat, unpinFormat } = usePinnedFormats();
+
+  const tabs = useMemo(
+    () => [
+      ...FORMATS.map((f) => ({ ...f })),
+      ...pinnedFormats.map((pf) => ({
+        ...pf,
+        onRemove: () => unpinFormat(pf.id),
+      })),
+      CUSTOM,
+    ],
+    [pinnedFormats, unpinFormat]
+  );
 
   // configure bignumber.js library
   BigNumber.set({ DECIMAL_PLACES: BIGNUMBER_DECIMAL_PLACES });
@@ -86,8 +99,17 @@ const App: FC = (): ReactElement => {
             <FormatConverter key={i} {...e} />
           </Route>
         ))}
+        {pinnedFormats.map((pf) => (
+          <Route key={pf.id} path={pf.urlPath}>
+            <FormatConverter
+              name={pf.name}
+              exponentWidth={pf.exponentWidth}
+              significandWidth={pf.significandWidth}
+            />
+          </Route>
+        ))}
         <Route path={CUSTOM.urlPath}>
-          <CustomFormatConverter {...CUSTOM} />
+          <CustomFormatConverter {...CUSTOM} pinFormat={pinFormat} />
         </Route>
         <Route path={"/"}>
           <Redirect to={FORMATS[DEFAULT_FORMAT_INDEX].urlPath} />

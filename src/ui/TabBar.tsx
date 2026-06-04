@@ -1,7 +1,7 @@
 import React, { FC, ReactElement } from "react";
 import styled from "styled-components";
 
-import { BACKGROUND_COLOR } from "../constants";
+import { BACKGROUND_COLOR, UNPIN_TOOLTIP_STRING } from "../constants";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -21,6 +21,8 @@ const TabButton = styled.button`
   border-radius: 0.4rem;
   border-color: white;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 
   &:hover,
   &.active {
@@ -29,10 +31,23 @@ const TabButton = styled.button`
   }
 `;
 
+const RemoveButton = styled.span`
+  margin-left: 0.6rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
 interface TabBarProps {
   tabs: {
     name: string;
     urlPath: string;
+    onRemove?: () => void;
   }[];
   activeTab: number;
   clickTab: (urlPath: string) => void;
@@ -50,6 +65,17 @@ const TabBar: FC<TabBarProps> = (props: TabBarProps): ReactElement => (
         }
       >
         {e.name}
+        {e.onRemove && (
+          <RemoveButton
+            title={UNPIN_TOOLTIP_STRING}
+            onClick={(evt) => {
+              evt.stopPropagation();
+              e.onRemove?.();
+            }}
+          >
+            &times;
+          </RemoveButton>
+        )}
       </TabButton>
     ))}
   </Wrapper>
