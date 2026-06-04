@@ -88,6 +88,7 @@ interface PanelProps {
   bits: boolean[];
   updateInputValue: (inputValue: string) => void;
   updateValue: (bits: boolean[]) => void;
+  onCommit: (decimalInput: string) => void;
 }
 
 const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
@@ -153,10 +154,18 @@ const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
             onChange={(e) =>
               onDecimalInput(e.target.value, e.target.validity.valid)
             }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                props.onCommit(decimalInput);
+              }
+            }}
           />
           <ClipboardButton
             title={CLIPBOARD_TOOLTIP_STRING}
-            onClick={() => onCopyButton(decimalInput)}
+            onClick={() => {
+              onCopyButton(decimalInput);
+              props.onCommit(decimalInput);
+            }}
           >
             {CLIPBOARD_BUTTON_STRING}
           </ClipboardButton>

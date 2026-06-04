@@ -48,6 +48,8 @@ export const HEX_PREFIX_STRING = "0x";
 export const PIN_FORMAT_BUTTON_STRING = "📌 Pin this format";
 export const UNPIN_TOOLTIP_STRING = "Remove pinned format";
 export const PIN_NAME_PLACEHOLDER = "Name this format…";
+export const HISTORY_PANEL_TITLE = "History";
+export const HISTORY_CLEAR_BUTTON_STRING = "Clear";
 
 // local storage
 export const DECIMAL_INPUT_STORAGE_KEY = "-input";
@@ -58,6 +60,8 @@ export const NOTATION_STORAGE_KEY = "-notation";
 export const CUSTOM_EXPONENT_KEY = "custom-exponent";
 export const CUSTOM_SIGNIFICAND_KEY = "custom-significand";
 export const PINNED_FORMATS_KEY = "pinned-formats";
+export const HISTORY_STORAGE_KEY = "-history";
+export const MAX_HISTORY_ENTRIES = 100;
 
 // styling
 export const BACKGROUND_COLOR = "#0e171c";

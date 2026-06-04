@@ -10,6 +10,7 @@ import {
   ROUNDING_MODE,
   ROUNDING_STORAGE_KEY,
 } from "../constants";
+import { useFormatHistory } from "../hooks/useFormatHistory";
 import useLocalStorage from "../hooks/useLocalStorage";
 import BitPanel from "./BitPanel";
 import ConfigPanel from "./ConfigPanel";
@@ -29,8 +30,11 @@ import {
   getExponent,
   getSignificand,
   isSubnormal,
+  stringifyBits,
+  stringifyBitsToHex,
   stringifyFlop,
 } from "./flop";
+import HistoryPanel from "./HistoryPanel";
 import Panel from "./Panel";
 
 const Wrapper = styled.div`
@@ -93,6 +97,7 @@ const FormatConverter: FC<FormatConverterProps> = (
   );
   const [storedFlop, setStoredFlop] = useState(defaultFlop());
   const [error, setError] = useState<null | Flop>(null);
+  const { history, addEntry, clearHistory } = useFormatHistory(props.name);
 
   const onFlop754Update = (value: Flop754) => {
     setFlop(null);
@@ -199,12 +204,32 @@ const FormatConverter: FC<FormatConverterProps> = (
             )
           )
         }
+        onCommit={(inputValue: string) => {
+          if (inputValue.length === 0) return;
+          addEntry({
+            decimalInput: inputValue,
+            storedValue: safeStringifyFlop(
+              storedFlop,
+              scientificNotation,
+              props.supportsInfinity,
+              props.supportsNaN
+            ),
+            binaryRep: stringifyBits([sign, exponent, significand].flat()),
+            hexRep: stringifyBitsToHex([sign, exponent, significand].flat()),
+          });
+        }}
       />
       <ConfigPanel
         roundingMode={roundingMode}
         scientificNotation={scientificNotation}
         updateRoundingMode={onRoundingModeUpdate}
         updateNotation={onNotationUpdate}
+      />
+      <HistoryPanel
+        formatName={props.name}
+        history={history}
+        onSelect={(entry) => onFlopUpdate(generateFlop(entry.decimalInput))}
+        onClear={clearHistory}
       />
     </Wrapper>
   );
