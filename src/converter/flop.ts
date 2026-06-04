@@ -91,17 +91,36 @@ export const deserializeFlop = (jsonString: string): Flop => {
 export const generateFlop754 = (
   sign: boolean[],
   exponent: boolean[],
-  significand: boolean[]
+  significand: boolean[],
+  supportsInfinity = true,
+  supportsNaN = true
 ): Flop754 => {
-  const type = exponent.some((e) => e)
-    ? exponent.every((e) => e)
-      ? significand.every((e) => !e)
-        ? sign[0]
-          ? Flop754Type.NEGATIVE_INFINITY
-          : Flop754Type.POSITIVE_INFINITY
-        : Flop754Type.NAN
-      : Flop754Type.NORMAL
-    : Flop754Type.SUBNORMAL;
+  let type: Flop754Type;
+  const isAllOnesExponent = exponent.every((e) => e);
+  const isAllZerosExponent = exponent.every((e) => !e);
+
+  if (isAllOnesExponent) {
+    if (supportsInfinity && significand.every((e) => !e)) {
+      type = sign[0]
+        ? Flop754Type.NEGATIVE_INFINITY
+        : Flop754Type.POSITIVE_INFINITY;
+    } else if (supportsNaN) {
+      if (supportsInfinity) {
+        type = Flop754Type.NAN;
+      } else {
+        type = significand.every((e) => e)
+          ? Flop754Type.NAN
+          : Flop754Type.NORMAL;
+      }
+    } else {
+      type = Flop754Type.NORMAL;
+    }
+  } else if (isAllZerosExponent) {
+    type = Flop754Type.SUBNORMAL;
+  } else {
+    type = Flop754Type.NORMAL;
+  }
+
   const signBit = sign[0];
   const adjustedExponent =
     (type === Flop754Type.SUBNORMAL
@@ -248,11 +267,59 @@ export const convertFlop754ToFlop = (flop754: Flop754): Flop => {
 };
 
 /**
+ * Gets the maximum representable finite value as a Flop754 object.
+ * If supportsInfinity is true, it represents the maximum finite IEEE 754 value.
+ * If supportsInfinity is false, the all-ones exponent is treated as a normal exponent.
+ * If supportsNaN is true and supportsInfinity is false, the all-ones significand is reserved for NaN.
+ */
+export const getMaxFlop754 = (
+  exponentWidth: number,
+  significandWidth: number,
+  supportsInfinity = true,
+  supportsNaN = true,
+  sign = false
+): Flop754 => {
+  const { max: maxExponentRange } = getExponentRange(exponentWidth);
+  if (supportsInfinity) {
+    const exponent = maxExponentRange;
+    const significand = new BigNumber(2).minus(
+      new BigNumber(2).exponentiatedBy(-significandWidth)
+    );
+    return {
+      type: Flop754Type.NORMAL,
+      sign,
+      exponent,
+      significand,
+    };
+  } else {
+    const exponent = maxExponentRange + 1;
+    let significand;
+    if (supportsNaN) {
+      significand = new BigNumber(2).minus(
+        new BigNumber(2).exponentiatedBy(-significandWidth + 1)
+      );
+    } else {
+      significand = new BigNumber(2).minus(
+        new BigNumber(2).exponentiatedBy(-significandWidth)
+      );
+    }
+    return {
+      type: Flop754Type.NORMAL,
+      sign,
+      exponent,
+      significand,
+    };
+  }
+};
+
+/**
  * Converts a Flop object to a Flop754 object.
  * @param flop object to be converted
  * @param exponentWidth exponent bit size of target IEEE 754 type
  * @param significandWidth significand bit size of target IEEE 754 type
  * @param roundingMode rounding mode to use (default halfToEven)
+ * @param supportsInfinity flag indicating if the format supports infinity
+ * @param supportsNaN flag indicating if the format supports NaN
  * @returns resulting Flop754 object
  */
 // TODO: Cleanup and optimize
@@ -260,7 +327,9 @@ export const convertFlopToFlop754 = (
   flop: Flop,
   exponentWidth: number,
   significandWidth: number,
-  roundingMode = ROUNDING_MODE.halfToEven
+  roundingMode = ROUNDING_MODE.halfToEven,
+  supportsInfinity = true,
+  supportsNaN = true
 ): Flop754 => {
   // extract sign
   const sign = flop.value.isNegative();
@@ -325,23 +394,117 @@ export const convertFlopToFlop754 = (
   if (integer.isZero()) {
     type = Flop754Type.SUBNORMAL;
   }
-  if (exponent > maxExponentRange) {
-    type = sign ? Flop754Type.NEGATIVE_INFINITY : Flop754Type.POSITIVE_INFINITY;
-    exponent = maxExponentRange + 1;
-    significand = one;
+
+  const limitExponentRange = supportsInfinity
+    ? maxExponentRange
+    : maxExponentRange + 1;
+
+  if (exponent > limitExponentRange) {
+    if (supportsInfinity) {
+      type = sign
+        ? Flop754Type.NEGATIVE_INFINITY
+        : Flop754Type.POSITIVE_INFINITY;
+      exponent = maxExponentRange + 1;
+      significand = one;
+    } else {
+      const maxVal = getMaxFlop754(
+        exponentWidth,
+        significandWidth,
+        supportsInfinity,
+        supportsNaN,
+        sign
+      );
+      type = maxVal.type;
+      exponent = maxVal.exponent;
+      significand = maxVal.significand;
+    }
+  } else if (exponent === limitExponentRange) {
+    let maxSignificand;
+    if (supportsInfinity) {
+      maxSignificand = new BigNumber(2).minus(
+        new BigNumber(2).exponentiatedBy(-significandWidth)
+      );
+    } else if (supportsNaN) {
+      maxSignificand = new BigNumber(2).minus(
+        new BigNumber(2).exponentiatedBy(-significandWidth + 1)
+      );
+    } else {
+      maxSignificand = new BigNumber(2).minus(
+        new BigNumber(2).exponentiatedBy(-significandWidth)
+      );
+    }
+
+    if (significand.isGreaterThan(maxSignificand)) {
+      if (supportsInfinity) {
+        type = sign
+          ? Flop754Type.NEGATIVE_INFINITY
+          : Flop754Type.POSITIVE_INFINITY;
+        exponent = maxExponentRange + 1;
+        significand = one;
+      } else {
+        const maxVal = getMaxFlop754(
+          exponentWidth,
+          significandWidth,
+          supportsInfinity,
+          supportsNaN,
+          sign
+        );
+        type = maxVal.type;
+        exponent = maxVal.exponent;
+        significand = maxVal.significand;
+      }
+    }
   }
 
   // TODO: Is this necessary?
   // override type assignment if FlopType is set
   switch (flop.type) {
     case FlopType.POSITIVE_INFINITY:
-      type = Flop754Type.POSITIVE_INFINITY;
+      if (supportsInfinity) {
+        type = Flop754Type.POSITIVE_INFINITY;
+      } else {
+        const maxVal = getMaxFlop754(
+          exponentWidth,
+          significandWidth,
+          false,
+          supportsNaN,
+          false
+        );
+        type = maxVal.type;
+        exponent = maxVal.exponent;
+        significand = maxVal.significand;
+      }
       break;
     case FlopType.NEGATIVE_INFINITY:
-      type = Flop754Type.NEGATIVE_INFINITY;
+      if (supportsInfinity) {
+        type = Flop754Type.NEGATIVE_INFINITY;
+      } else {
+        const maxVal = getMaxFlop754(
+          exponentWidth,
+          significandWidth,
+          false,
+          supportsNaN,
+          true
+        );
+        type = maxVal.type;
+        exponent = maxVal.exponent;
+        significand = maxVal.significand;
+      }
       break;
     case FlopType.NAN:
-      type = Flop754Type.NAN;
+      if (supportsNaN) {
+        type = Flop754Type.NAN;
+        if (!supportsInfinity) {
+          exponent = maxExponentRange + 1;
+          significand = new BigNumber(2).minus(
+            new BigNumber(2).exponentiatedBy(-significandWidth)
+          );
+        }
+      } else {
+        type = Flop754Type.SUBNORMAL;
+        exponent = getExponentRange(exponentWidth).min;
+        significand = new BigNumber(0);
+      }
       break;
   }
 

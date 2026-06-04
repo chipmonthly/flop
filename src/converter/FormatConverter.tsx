@@ -4,8 +4,6 @@ import styled from "styled-components";
 import {
   FLOP_STORAGE_KEY,
   FLOP754_STORAGE_KEY,
-  INFINITY_NOT_SUPPORTED_STRING,
-  NAN_NOT_SUPPORTED_STRING,
   NOTATION_STORAGE_KEY,
   ROUNDING_MODE,
   ROUNDING_STORAGE_KEY,
@@ -63,14 +61,7 @@ const safeStringifyFlop = (
   supportsInfinity = true,
   supportsNaN = true
 ): string => {
-  const raw = stringifyFlop(flop, scientific);
-  if (!supportsInfinity && (raw === "infinity" || raw === "-infinity")) {
-    return INFINITY_NOT_SUPPORTED_STRING;
-  }
-  if (!supportsNaN && raw === "NaN") {
-    return NAN_NOT_SUPPORTED_STRING;
-  }
-  return raw;
+  return stringifyFlop(flop, scientific);
 };
 
 const FormatConverter: FC<FormatConverterProps> = (
@@ -126,7 +117,9 @@ const FormatConverter: FC<FormatConverterProps> = (
         flop,
         props.exponentWidth,
         props.significandWidth,
-        roundingMode
+        roundingMode,
+        props.supportsInfinity !== false,
+        props.supportsNaN !== false
       );
       setFlop754(updated754Value);
     }
@@ -136,6 +129,8 @@ const FormatConverter: FC<FormatConverterProps> = (
     setFlop754,
     props.exponentWidth,
     props.significandWidth,
+    props.supportsInfinity,
+    props.supportsNaN,
   ]);
 
   useEffect(() => {
@@ -174,7 +169,17 @@ const FormatConverter: FC<FormatConverterProps> = (
           sign: boolean[],
           exponent: boolean[],
           significand: boolean[]
-        ) => onFlop754Update(generateFlop754(sign, exponent, significand))}
+        ) =>
+          onFlop754Update(
+            generateFlop754(
+              sign,
+              exponent,
+              significand,
+              props.supportsInfinity !== false,
+              props.supportsNaN !== false
+            )
+          )
+        }
       />
       <Panel
         formatName={props.name}
@@ -200,7 +205,9 @@ const FormatConverter: FC<FormatConverterProps> = (
               bits.slice(
                 1 + props.exponentWidth,
                 1 + props.exponentWidth + props.significandWidth
-              )
+              ),
+              props.supportsInfinity !== false,
+              props.supportsNaN !== false
             )
           )
         }
