@@ -10,6 +10,10 @@ export interface HistoryEntry {
   storedValue: string; // stringified back-converted result
   binaryRep: string; // full bit string
   hexRep: string; // hex string (without "0x" prefix)
+  error?: string; // stringified error representation
+  sign?: string; // sign bit string
+  exponent?: string; // exponent bit string
+  mantissa?: string; // mantissa bit string
 }
 
 export const useFormatHistory = (
@@ -18,6 +22,7 @@ export const useFormatHistory = (
   history: HistoryEntry[];
   addEntry: (entry: Omit<HistoryEntry, "id" | "timestamp">) => void;
   clearHistory: () => void;
+  deleteEntry: (id: string) => void;
 } => {
   const [history, setHistory] = useLocalStorage<HistoryEntry[]>(
     `${formatName}${HISTORY_STORAGE_KEY}`,
@@ -38,5 +43,12 @@ export const useFormatHistory = (
 
   const clearHistory = useCallback(() => setHistory([]), [setHistory]);
 
-  return { history, addEntry, clearHistory };
+  const deleteEntry = useCallback(
+    (id: string) => {
+      setHistory(history.filter((entry) => entry.id !== id));
+    },
+    [history, setHistory]
+  );
+
+  return { history, addEntry, clearHistory, deleteEntry };
 };
