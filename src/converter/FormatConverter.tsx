@@ -4,6 +4,8 @@ import styled from "styled-components";
 import {
   FLOP_STORAGE_KEY,
   FLOP754_STORAGE_KEY,
+  INFINITY_NOT_SUPPORTED_STRING,
+  NAN_NOT_SUPPORTED_STRING,
   NOTATION_STORAGE_KEY,
   ROUNDING_MODE,
   ROUNDING_STORAGE_KEY,
@@ -47,7 +49,25 @@ interface FormatConverterProps {
   name: string;
   exponentWidth: number;
   significandWidth: number;
+  supportsInfinity?: boolean;
+  supportsNaN?: boolean;
 }
+
+const safeStringifyFlop = (
+  flop: Flop,
+  scientific: boolean,
+  supportsInfinity = true,
+  supportsNaN = true
+): string => {
+  const raw = stringifyFlop(flop, scientific);
+  if (!supportsInfinity && (raw === "infinity" || raw === "-infinity")) {
+    return INFINITY_NOT_SUPPORTED_STRING;
+  }
+  if (!supportsNaN && raw === "NaN") {
+    return NAN_NOT_SUPPORTED_STRING;
+  }
+  return raw;
+};
 
 const FormatConverter: FC<FormatConverterProps> = (
   props: FormatConverterProps
@@ -154,7 +174,12 @@ const FormatConverter: FC<FormatConverterProps> = (
       <Panel
         formatName={props.name}
         clearInput={flop === null}
-        stored={stringifyFlop(storedFlop, scientificNotation)}
+        stored={safeStringifyFlop(
+          storedFlop,
+          scientificNotation,
+          props.supportsInfinity,
+          props.supportsNaN
+        )}
         error={error ? stringifyFlop(error, scientificNotation) : ""}
         bits={[sign, exponent, significand].flat(1)}
         updateInputValue={(inputValue: string) =>

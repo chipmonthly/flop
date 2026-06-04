@@ -70,43 +70,111 @@ export enum ROUNDING_MODE {
   towardZero,
 }
 
+export interface FormatDefinition {
+  name: string;
+  exponentWidth: number;
+  significandWidth: number;
+  urlPath: string;
+  pageTitle: string;
+  /** When false, ±Infinity bit patterns produce a "not supported" label in the UI.
+   *  Defaults to true when absent. */
+  supportsInfinity?: boolean;
+  /** When false, NaN bit patterns produce a "not supported" label in the UI.
+   *  Defaults to true when absent. */
+  supportsNaN?: boolean;
+  /** Short human-readable description (shown as tooltip / subtitle). */
+  description?: string;
+  /** Link to the authoritative specification document. */
+  referenceUrl?: string;
+}
+
+export const INFINITY_NOT_SUPPORTED_STRING =
+  "[±Infinity not supported by this format]";
+export const NAN_NOT_SUPPORTED_STRING = "[NaN not supported by this format]";
+
 // formats
-export const FP32 = {
+export const FP32: FormatDefinition = {
   name: "FP32",
   exponentWidth: 8,
   significandWidth: 23,
   urlPath: "/float-converter",
   pageTitle: "Float Converter",
 };
-export const FP64 = {
+export const FP64: FormatDefinition = {
   name: "FP64",
   exponentWidth: 11,
   significandWidth: 52,
   urlPath: "/double-converter",
   pageTitle: "Double Converter",
 };
-export const FP16 = {
+export const FP16: FormatDefinition = {
   name: "FP16",
   exponentWidth: 5,
   significandWidth: 10,
   urlPath: "/half-precision-converter",
   pageTitle: "Half Precision Converter",
 };
-export const BF16 = {
+export const BF16: FormatDefinition = {
   name: "bfloat16",
   exponentWidth: 8,
   significandWidth: 7,
   urlPath: "/brainfloat-converter",
   pageTitle: "Brain Float Converter",
 };
-export const TF32 = {
+export const TF32: FormatDefinition = {
   name: "TensorFloat-32",
   exponentWidth: 8,
   significandWidth: 10,
   urlPath: "/tensorfloat-converter",
   pageTitle: "TensorFloat Converter",
 };
-export const FORMATS = [FP32, FP64, FP16, BF16, TF32];
+export const FP8_E5M2: FormatDefinition = {
+  name: "FP8 E5M2",
+  exponentWidth: 5,
+  significandWidth: 2,
+  urlPath: "/fp8-e5m2-converter",
+  pageTitle: "FP8 E5M2 Converter",
+  supportsInfinity: true,
+  supportsNaN: true,
+  description: "8-bit float, 5-bit exponent (NVIDIA/Arm/Intel spec 2022)",
+  referenceUrl: "https://arxiv.org/abs/2209.05433",
+};
+
+export const FP8_E4M3: FormatDefinition = {
+  name: "FP8 E4M3",
+  exponentWidth: 4,
+  significandWidth: 3,
+  urlPath: "/fp8-e4m3-converter",
+  pageTitle: "FP8 E4M3 Converter",
+  supportsInfinity: false, // E4M3 has no ±Inf encoding by spec
+  supportsNaN: true, // one NaN pattern: all-1s exponent + all-1s mantissa
+  description: "8-bit float, 4-bit exponent (NVIDIA/Arm/Intel spec 2022)",
+  referenceUrl: "https://arxiv.org/abs/2209.05433",
+};
+
+export const FP4_E2M1: FormatDefinition = {
+  name: "FP4 E2M1",
+  exponentWidth: 2,
+  significandWidth: 1,
+  urlPath: "/fp4-e2m1-converter",
+  pageTitle: "FP4 E2M1 Converter",
+  supportsInfinity: false,
+  supportsNaN: false,
+  description: "4-bit float, 2-bit exponent (OCP MX / MXFP4 spec)",
+  referenceUrl:
+    "https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf",
+};
+
+export const FORMATS: FormatDefinition[] = [
+  FP32,
+  FP64,
+  FP16,
+  BF16,
+  TF32,
+  FP8_E5M2,
+  FP8_E4M3,
+  FP4_E2M1,
+];
 export const DEFAULT_FORMAT_INDEX = 0;
 export const CUSTOM = {
   name: "Custom",
