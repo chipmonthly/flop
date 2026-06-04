@@ -79,20 +79,33 @@ const CollapseContainer = styled.div<{ expanded: boolean }>`
   overflow: hidden;
 `;
 
-const ListWrapper = styled.div`
-  overflow-y: auto;
-  max-height: 24rem;
-  background-color: ${BACKGROUND_COLOR};
+const ScrollContainer = styled.div`
+  overflow-x: auto;
+  width: 100%;
 `;
 
-const HistoryRow = styled.div`
-  display: flex;
+const HistoryGridHeader = styled.div`
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1.2fr 2.5fr 1.2fr 0.6fr 1.2fr 1.8fr 40px;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  align-items: center;
+`;
+
+const HistoryGridRow = styled.div`
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1.2fr 2.5fr 1.2fr 0.6fr 1.2fr 1.8fr 40px;
+  gap: 0.5rem;
   padding: 0.6rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
   transition: background-color 0.2s ease;
   align-items: center;
-  justify-content: space-between;
 
   &:last-child {
     border-bottom: none;
@@ -103,25 +116,43 @@ const HistoryRow = styled.div`
   }
 `;
 
-const RowMeta = styled.span`
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
-`;
-
-const RowValue = styled.span`
-  font-family: ${MONOSPACED_FONT_FAMILY};
-  font-size: 0.9rem;
+const GridCell = styled.span`
+  font-size: 0.85rem;
   color: white;
   word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
-const RowStored = styled.span`
+const MonospaceCell = styled(GridCell)`
   font-family: ${MONOSPACED_FONT_FAMILY};
-  font-size: 0.9rem;
-  color: ${ACCENT_COLOR};
-  word-break: break-all;
-  margin-left: 1rem;
-  text-align: right;
+`;
+
+const DeleteButton = styled.button`
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  border-radius: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #ff4d4f;
+    background-color: rgba(255, 77, 79, 0.1);
+  }
+`;
+
+const ListWrapper = styled.div`
+  overflow-y: auto;
+  max-height: 24rem;
+  background-color: ${BACKGROUND_COLOR};
 `;
 
 const EmptyText = styled.div`
@@ -133,22 +164,44 @@ const EmptyText = styled.div`
 
 interface HistoryPanelProps {
   formatName: string;
+  exponentWidth: number;
   history: HistoryEntry[];
   onSelect: (entry: HistoryEntry) => void;
   onClear: () => void;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
 }
+
+const getEntrySign = (entry: HistoryEntry, exponentWidth: number): string => {
+  if (entry.sign !== undefined) return entry.sign;
+  return entry.binaryRep.charAt(0) || "";
+};
+
+const getEntryExponent = (
+  entry: HistoryEntry,
+  exponentWidth: number
+): string => {
+  if (entry.exponent !== undefined) return entry.exponent;
+  return entry.binaryRep.slice(1, 1 + exponentWidth) || "";
+};
+
+const getEntryMantissa = (
+  entry: HistoryEntry,
+  exponentWidth: number
+): string => {
+  if (entry.mantissa !== undefined) return entry.mantissa;
+  return entry.binaryRep.slice(1 + exponentWidth) || "";
+};
 
 const HistoryPanel: FC<HistoryPanelProps> = (
   props: HistoryPanelProps
 ): ReactElement => {
   const [expanded, setExpanded] = useState(true);
 
-  const formatTime = (ts: number): string => {
-    const date = new Date(ts);
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
-      date.getSeconds()
-    )}`;
+  const handleClear = (): void => {
+    if (window.confirm("Are you sure you want to clear the history?")) {
+      props.onClear();
+    }
   };
 
   return (
@@ -158,49 +211,107 @@ const HistoryPanel: FC<HistoryPanelProps> = (
           {expanded ? "▼" : "▶"} {HISTORY_PANEL_TITLE} ({props.history.length})
         </TitleToggle>
         <Actions>
+          <ActionButton onClick={props.onAdd}>Add</ActionButton>
           <ActionButton
             disabled={props.history.length === 0}
-            onClick={props.onClear}
+            onClick={handleClear}
           >
             {HISTORY_CLEAR_BUTTON_STRING}
           </ActionButton>
           <ActionButton
             disabled={props.history.length === 0}
-            onClick={() => exportAsMarkdown(props.formatName, props.history)}
+            onClick={() =>
+              exportAsMarkdown(
+                props.formatName,
+                props.history,
+                props.exponentWidth
+              )
+            }
           >
             {EXPORT_MD_BUTTON_STRING}
           </ActionButton>
           <ActionButton
             disabled={props.history.length === 0}
-            onClick={() => exportAsCSV(props.formatName, props.history)}
+            onClick={() =>
+              exportAsCSV(props.formatName, props.history, props.exponentWidth)
+            }
           >
             {EXPORT_CSV_BUTTON_STRING}
           </ActionButton>
         </Actions>
       </Header>
       <CollapseContainer expanded={expanded}>
-        <ListWrapper>
+        <ScrollContainer>
           {props.history.length === 0 ? (
             <EmptyText>No history yet</EmptyText>
           ) : (
-            props.history.map((entry) => (
-              <HistoryRow key={entry.id} onClick={() => props.onSelect(entry)}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.2rem",
-                    flex: 1,
-                  }}
-                >
-                  <RowMeta>{formatTime(entry.timestamp)}</RowMeta>
-                  <RowValue>{entry.decimalInput}</RowValue>
-                </div>
-                <RowStored>{entry.storedValue}</RowStored>
-              </HistoryRow>
-            ))
+            <div style={{ minWidth: "75rem" }}>
+              <HistoryGridHeader>
+                <GridCell>Decimal Input</GridCell>
+                <GridCell>Value Stored</GridCell>
+                <GridCell>Error</GridCell>
+                <GridCell>Binary</GridCell>
+                <GridCell>Hex</GridCell>
+                <GridCell>Sign</GridCell>
+                <GridCell>Exponent</GridCell>
+                <GridCell>Mantissa</GridCell>
+                <GridCell></GridCell>
+              </HistoryGridHeader>
+              <ListWrapper>
+                {props.history.map((entry) => {
+                  const signVal = getEntrySign(entry, props.exponentWidth);
+                  const expVal = getEntryExponent(entry, props.exponentWidth);
+                  const mantVal = getEntryMantissa(entry, props.exponentWidth);
+                  return (
+                    <HistoryGridRow
+                      key={entry.id}
+                      onClick={() => props.onSelect(entry)}
+                    >
+                      <GridCell title={entry.decimalInput}>
+                        {entry.decimalInput}
+                      </GridCell>
+                      <MonospaceCell
+                        title={entry.storedValue}
+                        style={{ color: ACCENT_COLOR }}
+                      >
+                        {entry.storedValue}
+                      </MonospaceCell>
+                      <MonospaceCell title={entry.error || "0"}>
+                        {entry.error || "0"}
+                      </MonospaceCell>
+                      <MonospaceCell title={entry.binaryRep}>
+                        {entry.binaryRep}
+                      </MonospaceCell>
+                      <MonospaceCell title={`0x${entry.hexRep}`}>
+                        0x{entry.hexRep}
+                      </MonospaceCell>
+                      <MonospaceCell title={signVal}>{signVal}</MonospaceCell>
+                      <MonospaceCell title={expVal}>{expVal}</MonospaceCell>
+                      <MonospaceCell title={mantVal}>{mantVal}</MonospaceCell>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <DeleteButton
+                          title="Delete record"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            props.onDelete(entry.id);
+                          }}
+                        >
+                          &times;
+                        </DeleteButton>
+                      </div>
+                    </HistoryGridRow>
+                  );
+                })}
+              </ListWrapper>
+            </div>
           )}
-        </ListWrapper>
+        </ScrollContainer>
       </CollapseContainer>
     </PanelWrapper>
   );
