@@ -58,26 +58,26 @@ describe("exportHistory", () => {
   ];
 
   it("exports as markdown correctly", () => {
-    exportAsMarkdown("FP32", history);
+    exportAsMarkdown("FP32", history, 8);
     expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(mockClick).toHaveBeenCalled();
     expect(mockRevoke).toHaveBeenCalledWith("blob:mock-url");
     expect(blobContent[0]).toContain("# FP32 — Conversion History");
     expect(blobContent[0]).toContain(
-      "| 1 | 2023-06-04 10:30:00 | `3.14` | `3.1400001` | `01000000010010001111010111000011` | `0x4048f5c3` |"
+      "| 1 | 2023-06-04 10:30:00 | `3.14` | `3.1400001` | `0` | `01000000010010001111010111000011` | `0x4048f5c3` | `0` | `10000000` | `10010001111010111000011` |"
     );
   });
 
   it("exports as csv correctly", () => {
-    exportAsCSV("FP32", history);
+    exportAsCSV("FP32", history, 8);
     expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(mockClick).toHaveBeenCalled();
     expect(mockRevoke).toHaveBeenCalledWith("blob:mock-url");
     expect(blobContent[0]).toContain(
-      "\uFEFFIndex,Time (UTC),Decimal Input,Value Stored,Binary,Hex"
+      "\uFEFFIndex,Time (UTC),Decimal Input,Value Stored,Error,Binary,Hex,Sign,Exponent,Mantissa"
     );
     expect(blobContent[0]).toContain(
-      '1,2023-06-04 10:30:00,"3.14","3.1400001","01000000010010001111010111000011","0x4048f5c3"'
+      '1,2023-06-04 10:30:00,"3.14","3.1400001","0","01000000010010001111010111000011","0x4048f5c3","0","10000000","10010001111010111000011"'
     );
   });
 });

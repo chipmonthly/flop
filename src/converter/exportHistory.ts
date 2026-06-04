@@ -15,19 +15,32 @@ const download = (filename: string, content: string, mime: string): void => {
 
 export const exportAsMarkdown = (
   formatName: string,
-  history: HistoryEntry[]
+  history: HistoryEntry[],
+  exponentWidth: number
 ): void => {
   const header = `# ${formatName} — Conversion History\n\n`;
   const tableHead =
-    "| # | Time (UTC) | Decimal Input | Value Stored | Binary | Hex |\n" +
-    "|---|-----------|--------------|-------------|--------|-----|\n";
+    "| # | Time (UTC) | Decimal Input | Value Stored | Error | Binary | Hex | Sign | Exponent | Mantissa |\n" +
+    "|---|-----------|--------------|-------------|-------|--------|-----|------|----------|----------|\n";
   const rows = history
-    .map(
-      (e, i) =>
-        `| ${i + 1} | ${fmt(e.timestamp)} | \`${e.decimalInput}\` | \`${
-          e.storedValue
-        }\` | \`${e.binaryRep}\` | \`0x${e.hexRep}\` |`
-    )
+    .map((e, i) => {
+      const signVal =
+        e.sign !== undefined ? e.sign : e.binaryRep.charAt(0) || "";
+      const expVal =
+        e.exponent !== undefined
+          ? e.exponent
+          : e.binaryRep.slice(1, 1 + exponentWidth) || "";
+      const mantVal =
+        e.mantissa !== undefined
+          ? e.mantissa
+          : e.binaryRep.slice(1 + exponentWidth) || "";
+      const errVal = e.error !== undefined ? e.error : "0";
+      return `| ${i + 1} | ${fmt(e.timestamp)} | \`${e.decimalInput}\` | \`${
+        e.storedValue
+      }\` | \`${errVal}\` | \`${e.binaryRep}\` | \`0x${
+        e.hexRep
+      }\` | \`${signVal}\` | \`${expVal}\` | \`${mantVal}\` |`;
+    })
     .join("\n");
   download(
     `${formatName}-history.md`,
@@ -38,22 +51,39 @@ export const exportAsMarkdown = (
 
 export const exportAsCSV = (
   formatName: string,
-  history: HistoryEntry[]
+  history: HistoryEntry[],
+  exponentWidth: number
 ): void => {
-  const header = "Index,Time (UTC),Decimal Input,Value Stored,Binary,Hex\r\n";
+  const header =
+    "Index,Time (UTC),Decimal Input,Value Stored,Error,Binary,Hex,Sign,Exponent,Mantissa\r\n";
   const rows = history
-    .map((e, i) =>
-      [
+    .map((e, i) => {
+      const signVal =
+        e.sign !== undefined ? e.sign : e.binaryRep.charAt(0) || "";
+      const expVal =
+        e.exponent !== undefined
+          ? e.exponent
+          : e.binaryRep.slice(1, 1 + exponentWidth) || "";
+      const mantVal =
+        e.mantissa !== undefined
+          ? e.mantissa
+          : e.binaryRep.slice(1 + exponentWidth) || "";
+      const errVal = e.error !== undefined ? e.error : "0";
+      return [
         i + 1,
         fmt(e.timestamp),
         `"${e.decimalInput}"`,
         `"${e.storedValue}"`,
+        `"${errVal}"`,
         `"${e.binaryRep}"`,
         `"0x${e.hexRep}"`,
-      ].join(",")
-    )
+        `"${signVal}"`,
+        `"${expVal}"`,
+        `"${mantVal}"`,
+      ].join(",");
+    })
     .join("\r\n");
-  // UTF-8 BOM (\\uFEFF) ensures Excel auto-detects encoding correctly
+  // UTF-8 BOM (\uFEFF) ensures Excel auto-detects encoding correctly
   download(
     `${formatName}-history.csv`,
     "\uFEFF" + header + rows,
