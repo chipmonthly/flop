@@ -1,45 +1,73 @@
 import React, { FC, ReactElement } from "react";
 import styled from "styled-components";
 
-import { BACKGROUND_COLOR, UNPIN_TOOLTIP_STRING } from "../constants";
+import { ACCENT_COLOR, UNPIN_TOOLTIP_STRING } from "../constants";
 
-const Wrapper = styled.div`
+const Wrapper = styled.nav`
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-width: 50rem; // TODO: Handle this more elegantly
-  padding: 1rem;
+  box-sizing: border-box;
+  padding: 0.5rem 1rem;
+  gap: 0.35rem;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.5rem;
+    gap: 0.3rem;
+  }
 `;
 
 const TabButton = styled.button`
-  padding: 0.4rem 0.8rem;
-  margin: 0.6rem;
-
-  font-size: 1.4rem;
-  font-weight: bold;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   background-color: transparent;
-  color: white;
-  border-style: solid;
-  border-radius: 0.4rem;
-  border-color: white;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.35rem;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  transition: all 0.15s ease;
 
-  &:hover,
+  &:hover {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
   &.active {
-    background-color: white;
-    color: ${BACKGROUND_COLOR};
+    background-color: ${ACCENT_COLOR};
+    color: white;
+    border-color: ${ACCENT_COLOR};
+  }
+
+  @media (max-width: 768px) {
+    width: auto;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
   }
 `;
 
 const RemoveButton = styled.span`
-  margin-left: 0.6rem;
-  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  font-size: 1.1rem;
   line-height: 1;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
+  opacity: 0.6;
+  color: inherit;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  padding: 0 0.2rem;
 
   &:hover {
     opacity: 1;
+    transform: scale(1.2);
   }
 `;
 
@@ -64,7 +92,7 @@ const TabBar: FC<TabBarProps> = (props: TabBarProps): ReactElement => (
           i !== props.activeTab ? props.clickTab(e.urlPath) : null
         }
       >
-        {e.name}
+        <span>{e.name}</span>
         {e.onRemove && (
           <RemoveButton
             title={UNPIN_TOOLTIP_STRING}

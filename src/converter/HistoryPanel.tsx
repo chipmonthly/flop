@@ -196,7 +196,7 @@ const getEntryMantissa = (
 const HistoryPanel: FC<HistoryPanelProps> = (
   props: HistoryPanelProps
 ): ReactElement => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const handleClear = (): void => {
     if (window.confirm("Are you sure you want to clear the history?")) {

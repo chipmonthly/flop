@@ -12,6 +12,7 @@ import {
   ERROR_FIELD_NAME,
   HEX_PREFIX_STRING,
   HEX_REPRESENTATION_FIELD,
+  MONOSPACED_FONT_FAMILY,
   VALUE_STORED_FIELD_NAME,
 } from "../constants";
 import {
@@ -23,59 +24,96 @@ import {
 
 const Wrapper = styled.div`
   box-sizing: border-box;
-  padding: 1rem 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
 `;
 
 const Row = styled.div`
   min-height: 1.4rem;
-  padding: 0.2rem;
-
-  display: flex;
-`;
-
-const Col = styled.div`
-  flex: ${(props: { size: number }) => props.size};
   display: flex;
   align-items: center;
+  gap: 1rem;
+`;
+
+const Col = styled.div<{ size: number }>`
+  flex: ${(props) => props.size};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
 `;
 
 const FieldName = styled.div`
   white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  width: 100%;
 `;
 
 const InputField = styled.input`
   width: 100%;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: white;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+
+  &:focus {
+    outline: none;
+    border-color: ${ACCENT_COLOR};
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
 
   &:invalid {
-    background-color: pink;
+    border-color: #ff4d4f;
+    background-color: rgba(255, 77, 79, 0.05);
   }
 `;
 
 const ClipboardButton = styled.button`
-  max-width: 100%;
-  max-height: 100%;
-  padding: 0 0.4rem;
-  margin: 0.2rem;
-
   background-color: transparent;
-  color: white;
-  border-style: solid;
-  border-radius: 0.2rem;
-  border-color: white;
+  color: ${ACCENT_COLOR};
+  border: 1px solid rgba(3, 156, 253, 0.3);
+  border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 
   &:hover {
-    background-color: white;
+    background-color: ${ACCENT_COLOR};
     color: ${BACKGROUND_COLOR};
+    border-color: ${ACCENT_COLOR};
   }
 
   &:active {
-    background-color: ${ACCENT_COLOR};
-    border-color: ${ACCENT_COLOR};
     transform: scale(0.96);
   }
+`;
+
+const HexPrefix = styled.span`
+  font-family: ${MONOSPACED_FONT_FAMILY};
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-right: 0.25rem;
 `;
 
 interface PanelProps {
@@ -242,7 +280,7 @@ const Panel: FC<PanelProps> = (props: PanelProps): ReactElement => {
           <FieldName>{HEX_REPRESENTATION_FIELD}</FieldName>
         </Col>
         <Col size={5}>
-          {HEX_PREFIX_STRING}
+          <HexPrefix>{HEX_PREFIX_STRING}</HexPrefix>
           <InputField
             title={HEX_REPRESENTATION_FIELD}
             required

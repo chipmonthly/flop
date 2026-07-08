@@ -43,6 +43,7 @@ flop/
 │   ├── hooks/
 │   │   └── useLocalStorage.ts  # Generic localStorage hook
 │   └── ui/
+│       ├── About.tsx        # ★ About page showing app info and acknowledgements
 │       ├── Header.tsx       # App title bar
 │       ├── TabBar.tsx       # Format-selector tabs
 │       └── Footer.tsx       # Acknowledgements & build info
@@ -200,7 +201,6 @@ full impact and adding a test:
 
 | File                     | TODO                                                                              |
 | ------------------------ | --------------------------------------------------------------------------------- |
-| `src/App.tsx` L32        | `min-width: 50rem` — handle mobile/small viewports more elegantly                 |
 | `converter/flop.ts` L178 | `deconstructFlop754` assumes significand in Flop754 fits the width                |
 | `converter/flop.ts` L258 | `convertFlopToFlop754` — cleanup and optimize                                     |
 | `converter/flop.ts` L301 | Rounding dispatch is described as an "abomination"                                |

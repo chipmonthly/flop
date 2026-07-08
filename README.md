@@ -17,6 +17,7 @@ This is a website for hands-on exploration of floating-point types, and a conven
 - Decimal to float representation conversion, and vice versa
 - Wide range of IEEE 754-style types, including that of arbitrary exponent and significand width
 - Configurable rounding modes for different use cases (e.g. truncation for deep learning)
+- Responsive dual-pane layout with compact format selector sidebar and dedicated About page
 
 ## Contributing
 

@@ -16,51 +16,115 @@ import {
 import useLocalStorage from "../hooks/useLocalStorage";
 import FormatConverter from "./FormatConverter";
 
-const Wrapper = React.Fragment;
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+`;
+
+const CustomConfigContainer = styled.div`
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+`;
 
 const WidthPanel = styled.div`
-  max-width: 60%;
+  flex: 3;
   box-sizing: border-box;
-  padding: 2rem 0 0 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  width: 100%;
 `;
 
 const Row = styled.div`
-  padding: 0.4rem 0;
-
+  padding: 0.5rem 0;
   display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
-const Col = styled.div`
-  flex: ${(props: { size: number }) => props.size};
+const Col = styled.div<{ size: number }>`
+  flex: ${(props) => props.size};
   display: flex;
   align-items: center;
 `;
 
 const FieldName = styled.div`
   white-space: nowrap;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
 `;
 
 const NumberInputField = styled.input.attrs({
   type: "number",
 })`
   width: 100%;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: white;
+  padding: 0.4rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: ${ACCENT_COLOR};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
 `;
 
 const PinSection = styled.div`
+  flex: 2;
   display: flex;
-  margin-top: 1.5rem;
-  max-width: 60%;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+`;
+
+const PinLabel = styled.div`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: ${ACCENT_COLOR};
 `;
 
 const PinNameInput = styled.input`
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   color: white;
-  padding: 0.5rem;
+  padding: 0.4rem 0.6rem;
   font-family: inherit;
+  font-size: 0.95rem;
+
   &:focus {
     outline: none;
     border-color: ${ACCENT_COLOR};
@@ -75,8 +139,11 @@ const PinButton = styled.button`
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
   transition: all 0.2s ease;
   white-space: nowrap;
+  margin-top: 0.4rem;
 
   &:hover {
     background-color: ${ACCENT_COLOR};
@@ -122,95 +189,99 @@ const CustomFormatConverter: FC<CustomFormatPanelProps> = (
 
   return (
     <Wrapper>
-      <WidthPanel>
-        {/* Sign Width */}
-        <Row>
-          <Col size={2}>
-            <FieldName>{FIXED_SIGN_FIELD_NAME}</FieldName>
-          </Col>
-          <Col size={1}>
-            <NumberInputField
-              title={FIXED_SIGN_FIELD_NAME}
-              disabled
-              readOnly
-              value={1}
-            />
-          </Col>
-        </Row>
-        {/* Exponent Width */}
-        <Row>
-          <Col size={2}>
-            <FieldName>{CUSTOM_EXPONENT_FIELD_NAME}</FieldName>
-          </Col>
-          <Col size={1}>
-            <NumberInputField
-              title={CUSTOM_EXPONENT_FIELD_NAME}
-              min={props.minExponentWidth}
-              max={props.maxExponentWidth}
-              value={exponentWidth}
-              onChange={(e) =>
-                onExponentUpdate(
-                  parseInt(e.target.value),
-                  e.target.validity.valid
-                )
-              }
-            />
-          </Col>
-        </Row>
-        {/* Significand Width */}
-        <Row>
-          <Col size={2}>
-            <FieldName>{CUSTOM_SIGNIFICAND_FIELD_NAME}</FieldName>
-          </Col>
-          <Col size={1}>
-            <NumberInputField
-              title={CUSTOM_SIGNIFICAND_FIELD_NAME}
-              min={props.minSignificandWidth}
-              max={props.maxSignificandWidth}
-              value={significandWidth}
-              onChange={(e) =>
-                onSignificandUpdate(
-                  parseInt(e.target.value),
-                  e.target.validity.valid
-                )
-              }
-            />
-          </Col>
-        </Row>
-        {/* Total Width */}
-        <Row>
-          <Col size={2}>
-            <FieldName>{TOTAL_WIDTH_FIELD_NAME}</FieldName>
-          </Col>
-          <Col size={1}>
-            <NumberInputField
-              title={TOTAL_WIDTH_FIELD_NAME}
-              disabled
-              readOnly
-              value={1 + significandWidth + exponentWidth}
-            />
-          </Col>
-        </Row>
-      </WidthPanel>
-      <PinSection>
-        <PinNameInput
-          value={pinName}
-          onChange={(e) => setPinName(e.target.value)}
-          placeholder={PIN_NAME_PLACEHOLDER}
-        />
-        <PinButton
-          onClick={() => {
-            props.pinFormat(
-              pinName.trim() || `Custom E${exponentWidth}M${significandWidth}`,
-              exponentWidth,
-              significandWidth
-            );
-            setPinName("");
-          }}
-        >
-          {PIN_FORMAT_BUTTON_STRING}
-        </PinButton>
-      </PinSection>
+      <CustomConfigContainer>
+        <WidthPanel>
+          {/* Sign Width */}
+          <Row>
+            <Col size={2}>
+              <FieldName>{FIXED_SIGN_FIELD_NAME}</FieldName>
+            </Col>
+            <Col size={1}>
+              <NumberInputField
+                title={FIXED_SIGN_FIELD_NAME}
+                disabled
+                readOnly
+                value={1}
+              />
+            </Col>
+          </Row>
+          {/* Exponent Width */}
+          <Row>
+            <Col size={2}>
+              <FieldName>{CUSTOM_EXPONENT_FIELD_NAME}</FieldName>
+            </Col>
+            <Col size={1}>
+              <NumberInputField
+                title={CUSTOM_EXPONENT_FIELD_NAME}
+                min={props.minExponentWidth}
+                max={props.maxExponentWidth}
+                value={exponentWidth}
+                onChange={(e) =>
+                  onExponentUpdate(
+                    parseInt(e.target.value),
+                    e.target.validity.valid
+                  )
+                }
+              />
+            </Col>
+          </Row>
+          {/* Significand Width */}
+          <Row>
+            <Col size={2}>
+              <FieldName>{CUSTOM_SIGNIFICAND_FIELD_NAME}</FieldName>
+            </Col>
+            <Col size={1}>
+              <NumberInputField
+                title={CUSTOM_SIGNIFICAND_FIELD_NAME}
+                min={props.minSignificandWidth}
+                max={props.maxSignificandWidth}
+                value={significandWidth}
+                onChange={(e) =>
+                  onSignificandUpdate(
+                    parseInt(e.target.value),
+                    e.target.validity.valid
+                  )
+                }
+              />
+            </Col>
+          </Row>
+          {/* Total Width */}
+          <Row>
+            <Col size={2}>
+              <FieldName>{TOTAL_WIDTH_FIELD_NAME}</FieldName>
+            </Col>
+            <Col size={1}>
+              <NumberInputField
+                title={TOTAL_WIDTH_FIELD_NAME}
+                disabled
+                readOnly
+                value={1 + significandWidth + exponentWidth}
+              />
+            </Col>
+          </Row>
+        </WidthPanel>
+        <PinSection>
+          <PinLabel>Pin Custom Format</PinLabel>
+          <PinNameInput
+            value={pinName}
+            onChange={(e) => setPinName(e.target.value)}
+            placeholder={PIN_NAME_PLACEHOLDER}
+          />
+          <PinButton
+            onClick={() => {
+              props.pinFormat(
+                pinName.trim() ||
+                  `Custom E${exponentWidth}M${significandWidth}`,
+                exponentWidth,
+                significandWidth
+              );
+              setPinName("");
+            }}
+          >
+            {PIN_FORMAT_BUTTON_STRING}
+          </PinButton>
+        </PinSection>
+      </CustomConfigContainer>
       <FormatConverter
         name={props.name}
         exponentWidth={exponentWidth}

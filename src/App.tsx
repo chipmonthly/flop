@@ -23,30 +23,63 @@ import {
 import CustomFormatConverter from "./converter/CustomFormatConverter";
 import FormatConverter from "./converter/FormatConverter";
 import { usePinnedFormats } from "./hooks/usePinnedFormats";
+import About from "./ui/About";
 import Footer from "./ui/Footer";
 import Header from "./ui/Header";
 import TabBar from "./ui/TabBar";
 
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  min-width: 50rem; // TODO: Handle this more elegantly
-  min-height: 100%;
-  box-sizing: border-box;
-  padding: 6rem; // top-bottom left-right
-
+const LayoutContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  overflow: auto;
-
+  width: 100vw;
+  height: 100vh;
   background-color: ${BACKGROUND_COLOR};
   color: white;
-  text-align: center;
   font-family: ${MAIN_FONT_FAMILY};
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+`;
+
+const Sidebar = styled.aside`
+  width: 18rem;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: visible;
+  }
+`;
+
+const MainContent = styled.main`
+  flex-grow: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 2rem;
+
+  @media (max-width: 768px) {
+    height: auto;
+    padding: 1rem;
+    overflow-y: visible;
+  }
 `;
 
 const App: FC = (): ReactElement => {
@@ -63,6 +96,11 @@ const App: FC = (): ReactElement => {
         onRemove: () => unpinFormat(pf.id),
       })),
       CUSTOM,
+      {
+        name: "About",
+        urlPath: "/about",
+        pageTitle: "About - IEEE 754-Style Floating-Point Converter",
+      },
     ],
     [pinnedFormats, unpinFormat]
   );
@@ -90,33 +128,40 @@ const App: FC = (): ReactElement => {
   }, [location, tabs]);
 
   return (
-    <Wrapper>
-      <Header />
-      <TabBar tabs={tabs} activeTab={active} clickTab={onTabChange} />
-      <Switch>
-        {FORMATS.map((e, i) => (
-          <Route key={i} path={e.urlPath}>
-            <FormatConverter key={i} {...e} />
+    <LayoutContainer>
+      <Sidebar>
+        <Header />
+        <TabBar tabs={tabs} activeTab={active} clickTab={onTabChange} />
+      </Sidebar>
+      <MainContent>
+        <Switch>
+          {FORMATS.map((e, i) => (
+            <Route key={i} path={e.urlPath}>
+              <FormatConverter key={i} {...e} />
+            </Route>
+          ))}
+          {pinnedFormats.map((pf) => (
+            <Route key={pf.id} path={pf.urlPath}>
+              <FormatConverter
+                name={pf.name}
+                exponentWidth={pf.exponentWidth}
+                significandWidth={pf.significandWidth}
+              />
+            </Route>
+          ))}
+          <Route path={CUSTOM.urlPath}>
+            <CustomFormatConverter {...CUSTOM} pinFormat={pinFormat} />
           </Route>
-        ))}
-        {pinnedFormats.map((pf) => (
-          <Route key={pf.id} path={pf.urlPath}>
-            <FormatConverter
-              name={pf.name}
-              exponentWidth={pf.exponentWidth}
-              significandWidth={pf.significandWidth}
-            />
+          <Route path="/about">
+            <About />
           </Route>
-        ))}
-        <Route path={CUSTOM.urlPath}>
-          <CustomFormatConverter {...CUSTOM} pinFormat={pinFormat} />
-        </Route>
-        <Route path={"/"}>
-          <Redirect to={FORMATS[DEFAULT_FORMAT_INDEX].urlPath} />
-        </Route>
-      </Switch>
-      <Footer />
-    </Wrapper>
+          <Route path={"/"}>
+            <Redirect to={FORMATS[DEFAULT_FORMAT_INDEX].urlPath} />
+          </Route>
+        </Switch>
+        <Footer />
+      </MainContent>
+    </LayoutContainer>
   );
 };
 

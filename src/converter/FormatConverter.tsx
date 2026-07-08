@@ -38,14 +38,43 @@ import Panel from "./Panel";
 
 const Wrapper = styled.div`
   max-width: 100%;
-  padding: 2rem;
-
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.75rem;
 `;
 
 const Title = styled.h2`
-  font-size: 1.8rem;
+  font-size: 1.6rem;
+  margin: 0;
+  color: white;
+  font-weight: 600;
+`;
+
+const TwoColumnLayout = styled.div`
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+`;
+
+const Column = styled.div<{ flex?: number }>`
+  flex: ${(props) => props.flex || 1};
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 interface FormatConverterProps {
@@ -189,7 +218,9 @@ const FormatConverter: FC<FormatConverterProps> = (
 
   return (
     <Wrapper>
-      <Title>{props.name}</Title>
+      <HeaderRow>
+        <Title>{props.name}</Title>
+      </HeaderRow>
       <BitPanel
         {...props}
         sign={sign}
@@ -215,63 +246,71 @@ const FormatConverter: FC<FormatConverterProps> = (
           )
         }
       />
-      <Panel
-        formatName={props.name}
-        clearInput={flop === null}
-        decimalInput={decimalInput}
-        setDecimalInput={setDecimalInput}
-        stored={safeStringifyFlop(
-          storedFlop,
-          scientificNotation,
-          props.supportsInfinity,
-          props.supportsNaN
-        )}
-        error={error ? stringifyFlop(error, scientificNotation) : ""}
-        bits={[sign, exponent, significand].flat(1)}
-        updateInputValue={(inputValue: string) =>
-          onFlopUpdate(
-            inputValue.length === 0 ? null : generateFlop(inputValue)
-          )
-        }
-        updateValue={(bits: boolean[]) =>
-          onFlop754Update(
-            generateFlop754(
-              bits.slice(0, 1),
-              bits.slice(1, 1 + props.exponentWidth),
-              bits.slice(
-                1 + props.exponentWidth,
-                1 + props.exponentWidth + props.significandWidth
-              ),
-              props.supportsInfinity !== false,
-              props.supportsNaN !== false
-            )
-          )
-        }
-        onCommit={(inputValue: string) => {
-          if (inputValue.length === 0) return;
-          addEntry({
-            decimalInput: inputValue,
-            storedValue: safeStringifyFlop(
+      <TwoColumnLayout>
+        <Column flex={3}>
+          <Panel
+            formatName={props.name}
+            clearInput={flop === null}
+            decimalInput={decimalInput}
+            setDecimalInput={setDecimalInput}
+            stored={safeStringifyFlop(
               storedFlop,
               scientificNotation,
               props.supportsInfinity,
               props.supportsNaN
-            ),
-            binaryRep: stringifyBits([sign, exponent, significand].flat()),
-            hexRep: stringifyBitsToHex([sign, exponent, significand].flat()),
-            error: error ? stringifyFlop(error, scientificNotation) : "0",
-            sign: stringifyBits(sign),
-            exponent: stringifyBits(exponent),
-            mantissa: stringifyBits(significand),
-          });
-        }}
-      />
-      <ConfigPanel
-        roundingMode={roundingMode}
-        scientificNotation={scientificNotation}
-        updateRoundingMode={onRoundingModeUpdate}
-        updateNotation={onNotationUpdate}
-      />
+            )}
+            error={error ? stringifyFlop(error, scientificNotation) : ""}
+            bits={[sign, exponent, significand].flat(1)}
+            updateInputValue={(inputValue: string) =>
+              onFlopUpdate(
+                inputValue.length === 0 ? null : generateFlop(inputValue)
+              )
+            }
+            updateValue={(bits: boolean[]) =>
+              onFlop754Update(
+                generateFlop754(
+                  bits.slice(0, 1),
+                  bits.slice(1, 1 + props.exponentWidth),
+                  bits.slice(
+                    1 + props.exponentWidth,
+                    1 + props.exponentWidth + props.significandWidth
+                  ),
+                  props.supportsInfinity !== false,
+                  props.supportsNaN !== false
+                )
+              )
+            }
+            onCommit={(inputValue: string) => {
+              if (inputValue.length === 0) return;
+              addEntry({
+                decimalInput: inputValue,
+                storedValue: safeStringifyFlop(
+                  storedFlop,
+                  scientificNotation,
+                  props.supportsInfinity,
+                  props.supportsNaN
+                ),
+                binaryRep: stringifyBits([sign, exponent, significand].flat()),
+                hexRep: stringifyBitsToHex(
+                  [sign, exponent, significand].flat()
+                ),
+                error: error ? stringifyFlop(error, scientificNotation) : "0",
+                sign: stringifyBits(sign),
+                exponent: stringifyBits(exponent),
+                mantissa: stringifyBits(significand),
+              });
+            }}
+          />
+        </Column>
+        <Column flex={2}>
+          <ConfigPanel
+            roundingMode={roundingMode}
+            scientificNotation={scientificNotation}
+            updateRoundingMode={onRoundingModeUpdate}
+            updateNotation={onNotationUpdate}
+          />
+        </Column>
+      </TwoColumnLayout>
       <HistoryPanel
         formatName={props.name}
         exponentWidth={props.exponentWidth}

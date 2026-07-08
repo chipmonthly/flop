@@ -2,6 +2,7 @@ import React, { FC, ReactElement } from "react";
 import styled from "styled-components";
 
 import {
+  ACCENT_COLOR,
   NOTATION_FIELD_NAME,
   ROUNDING_MODE,
   ROUNDING_MODE_FIELD_NAME,
@@ -9,35 +10,65 @@ import {
 
 const Wrapper = styled.div`
   box-sizing: border-box;
-  padding: 1rem 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 `;
 
-const Row = styled.div`
-  padding: 0.4rem 0;
-
+const ConfigSection = styled.div`
   display: flex;
-`;
-
-const Col = styled.div`
-  flex: ${(props: { size: number }) => props.size};
-  display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const FieldName = styled.div`
-  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.25rem;
+`;
+
+const OptionGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
 `;
 
 const RadioLabel = styled.label`
-  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.8);
+
+  &:hover {
+    color: white;
+  }
 `;
 
 const RadioButton = styled.input.attrs({ type: "radio" })`
-  width: 100%;
   margin: 0;
+  margin-top: 0.15rem;
+  cursor: pointer;
+  accent-color: ${ACCENT_COLOR};
 `;
 
-const LineBreak = styled.br``;
+const SubText = styled.span`
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  display: block;
+`;
 
 interface ConfigPanelProps {
   roundingMode: ROUNDING_MODE;
@@ -52,11 +83,9 @@ const ConfigPanel: FC<ConfigPanelProps> = (
   return (
     <Wrapper>
       {/* Rounding Mode */}
-      <Row>
-        <Col size={2}>
-          <FieldName>{ROUNDING_MODE_FIELD_NAME}</FieldName>
-        </Col>
-        <Col size={5}>
+      <ConfigSection>
+        <FieldName>{ROUNDING_MODE_FIELD_NAME}</FieldName>
+        <OptionGroup>
           <RadioLabel>
             <RadioButton
               checked={props.roundingMode === ROUNDING_MODE.halfToEven}
@@ -64,9 +93,10 @@ const ConfigPanel: FC<ConfigPanelProps> = (
                 props.updateRoundingMode(ROUNDING_MODE.halfToEven)
               }
             />
-            Nearest, Ties to Even
-            <LineBreak />
-            (IEEE 754 default)
+            <div>
+              Nearest, Ties to Even
+              <SubText>(IEEE 754 default)</SubText>
+            </div>
           </RadioLabel>
           <RadioLabel>
             <RadioButton
@@ -75,18 +105,17 @@ const ConfigPanel: FC<ConfigPanelProps> = (
                 props.updateRoundingMode(ROUNDING_MODE.towardZero)
               }
             />
-            Toward 0
-            <LineBreak />
-            (truncation)
+            <div>
+              Toward 0<SubText>(truncation)</SubText>
+            </div>
           </RadioLabel>
-        </Col>
-      </Row>
+        </OptionGroup>
+      </ConfigSection>
+
       {/* Result Notation */}
-      <Row>
-        <Col size={2}>
-          <FieldName>{NOTATION_FIELD_NAME}</FieldName>
-        </Col>
-        <Col size={5}>
+      <ConfigSection>
+        <FieldName>{NOTATION_FIELD_NAME}</FieldName>
+        <OptionGroup>
           <RadioLabel>
             <RadioButton
               checked={!props.scientificNotation}
@@ -101,8 +130,8 @@ const ConfigPanel: FC<ConfigPanelProps> = (
             />
             Scientific
           </RadioLabel>
-        </Col>
-      </Row>
+        </OptionGroup>
+      </ConfigSection>
     </Wrapper>
   );
 };

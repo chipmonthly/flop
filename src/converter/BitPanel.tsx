@@ -5,11 +5,14 @@ import BitSegment from "./BitSegment";
 import { stringifyBits } from "./flop";
 
 const Wrapper = styled.div`
-  min-width: 36rem; // TODO: Handle this more elegantly
-  padding: 1rem 0;
-
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding: 1rem;
   display: flex;
   overflow-x: auto;
+  width: 100%;
 `;
 
 const Superscript = styled.sup`
