@@ -49,10 +49,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigation requests: return cached index.html for SPA client-side routing.
+  // Navigation requests: network-first, fall back to cached index.html for SPA client-side routing.
   if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match("/index.html").then((hit) => hit || fetch(event.request))
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const responseToCache = response.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put("/index.html", responseToCache));
+          }
+          return response;
+        })
+        .catch(() => caches.match("/index.html"))
     );
     return;
   }
@@ -62,9 +72,10 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((response) => {
         if (response.ok) {
+          const responseToCache = response.clone();
           caches
             .open(CACHE_NAME)
-            .then((cache) => cache.put(event.request, response.clone()));
+            .then((cache) => cache.put(event.request, responseToCache));
         }
         return response;
       })
