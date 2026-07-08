@@ -25,7 +25,7 @@ arbitrary custom formats.
 flop/
 ├── public/                  # Static assets served as-is
 ├── src/
-│   ├── App.tsx              # Root component; handles routing, tab state, GA init
+│   ├── App.tsx              # Root component; handles routing and tab state
 │   ├── App.test.tsx         # Smoke test for the root component
 │   ├── constants.ts         # All app-wide constants, colour tokens, and format definitions
 │   ├── index.tsx            # React DOM entry point
@@ -171,7 +171,7 @@ Set automatically during `yarn start` / `yarn build` via the `env` script:
 | ------------------- | ------------------------------------- | --------------------------------- |
 | `REACT_APP_VERSION` | `package.json` version                | Displayed in Footer               |
 | `REACT_APP_GIT_SHA` | Short git SHA                         | Displayed in Footer as build link |
-| `NODE_ENV`          | `test` / `development` / `production` | GA test mode guard                |
+| `NODE_ENV`          | `test` / `development` / `production` | Standard environment mode         |
 
 Do **not** create a `.env` file that overrides these.
 
