@@ -68,8 +68,8 @@ export const MAX_HISTORY_ENTRIES = 100;
 // styling
 export const BACKGROUND_COLOR = "#0e171c";
 export const ACCENT_COLOR = "#039cfd";
-export const MAIN_FONT_FAMILY = `'Roboto', sans-serif;`;
-export const MONOSPACED_FONT_FAMILY = `'Roboto Mono', monospace`;
+export const MAIN_FONT_FAMILY = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";`;
+export const MONOSPACED_FONT_FAMILY = `ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
 
 // bignumber.js
 export const BIGNUMBER_DECIMAL_PLACES = 3000;
